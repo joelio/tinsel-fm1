@@ -27,6 +27,7 @@ Nothing below is copied code; these are the sources of an idea, a method or a co
 | The bell, celesta, music-box and glockenspiel partials | published acoustics (church-bell partials as bell founders tune them; free bar and cantilever modes); docs/RESEARCH-NOTES.md section 5 cites them |
 | The feedback-delay-network reverb | the standard design (Jot; Schroeder), with lengths chosen for Tinsel |
 | Per-LED brightness by frames | felucca-bsp's `fm1_led_anim.h` (Hügelton Instruments, MPL-2.0) did it first; Tinsel's is written for Dinghy's tick |
+| The headphone switch on PB5 (`firmware/hal/fm1_jack.h`) | felucca-bsp's `boards/fm1/fm1_jack.h` (Henri David, MPL-2.0) found and measured it; Tinsel reads it with its own line |
 | The sine | Dinghy's refined parabola; the pitch table is Dinghy's |
 | Teaching by lit keys | Casio's Step Up Lesson and Yamaha's Education Suite (the idea of a mode that waits for the right key) |
 | What other FM-1 firmwares already do (so Tinsel does something else) | FM-1 Arcade, RetroDash, FM-1 Midi-Mania, Kris Jangle, GNOMNOM, Boardwalk, Mighty Arcade: docs/RESEARCH-NOTES.md section 4 |

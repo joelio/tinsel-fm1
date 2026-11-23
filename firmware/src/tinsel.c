@@ -34,6 +34,11 @@ static void fm1_led_level(uint32_t id, uint32_t lvl)   /* (the safe build: two l
 }
 #endif
 #include "tn_ui.h"
+#ifndef DINGHY_HOST
+#include "fm1_jack.h"
+#else
+static uint32_t fm1_hp_in(void) { return 0; }
+#endif
 #include "tn_set.h"
 #include "tn_snd.h"
 #include "tn_gfx.h"
@@ -288,6 +293,12 @@ static void app_main(void)
             if (advent_midi(&set, &adv_rx, st, d1, d2)) { set_touch(); snd_fx(SFX_TWINKLE); }
         ui_pass();
         now = fm1_ms;
+        {                                        /* headphones: a change that lasts 200 ms (the switch bounces) */
+            static uint32_t hp_raw, hp_since;
+            uint32_t h = fm1_hp_in();
+            if (h != hp_raw) { hp_raw = h; hp_since = now; }
+            else if (h != snd_phones && now - hp_since > 200u) snd_phones = h;
+        }
         if (now - last_draw >= 33u) {
             uint32_t dt = now - last_draw > 100u ? 100u : now - last_draw;
             last_draw = now;

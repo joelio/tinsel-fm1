@@ -72,7 +72,7 @@ typedef struct {
     uint16_t fm_ratio, fm_idx, fm_dec;          /* partial 0 bent by a modulator: its ratio (Q8), index (1304 = 1 rad), decay */
     snd_part_t p[4];
 } snd_inst_t;
-enum { TI_HANDBELL, TI_CHURCH, TI_CELESTA, TI_MUSICBOX, TI_GLOCK, TI_SOFTBASS, TI_PAD, TI_CHIME, TI_TOY, TN_NINST };
+enum { TI_HANDBELL, TI_CHURCH, TI_CELESTA, TI_MUSICBOX, TI_GLOCK, TI_SOFTBASS, TI_PAD, TI_CHIME, TI_TOY, TI_DEEPBASS, TN_NINST };
 static const snd_inst_t SND_INST[TN_NINST] = {
     /* handbell: the fundamental with a twelfth over it [RESEARCH 5] */
     {3, 0, 40, 70, 7000, 0, 0, 0, {{RAT(1.0), AMP(1.0), DEC(3.0)}, {RAT(3.0), AMP(0.4), DEC(1.5)}, {RAT(4.2), AMP(0.12), DEC(0.3)}, {0, 0, 0}}},
@@ -92,6 +92,8 @@ static const snd_inst_t SND_INST[TN_NINST] = {
     {2, 0, 20, 160, 5000, 0, 0, 0, {{RAT(1.0), AMP(1.0), DEC(0.35)}, {RAT(3.5), AMP(0.3), DEC(0.06)}, {0, 0, 0}, {0, 0, 0}}},
     /* toy: a bright FM blip for pops and boings */
     {1, 0, 10, 60, 7000, RAT(2.0), 2600, DEC(0.04), {{RAT(1.0), AMP(1.0), DEC(0.25)}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},
+    /* deep bass: the soft bass for headphones, its fundamental at the front (snd_start swaps it in) */
+    {3, 8, 0, 20, 6500, 0, 0, 0, {{RAT(1.0), AMP(1.0), DEC(1.2)}, {RAT(2.0), AMP(0.4), DEC(0.9)}, {RAT(3.0), AMP(0.15), DEC(0.6)}, {0, 0, 0}}},
 };
 
 typedef struct {
@@ -105,6 +107,7 @@ typedef struct {
 } snd_voice_t;
 static snd_voice_t snd_v[TN_VOICES];
 static uint32_t snd_rng = 0x2F6E2B1u, snd_ages, snd_ctl_count;
+static volatile uint32_t snd_phones;            /* headphones in: the bass plays its real low notes (the main loop sets it) */
 
 static uint32_t snd_rand(void) { snd_rng ^= snd_rng << 13; snd_rng ^= snd_rng >> 17; snd_rng ^= snd_rng << 5; return snd_rng; }
 
@@ -113,8 +116,10 @@ static uint32_t snd_mul16(uint32_t x, uint32_t d) { return (x >> 16) * d + (((x 
 
 static void snd_start(uint32_t inst, uint32_t midi, uint32_t vel, int32_t pan)
 {
-    const snd_inst_t *in = &SND_INST[inst % TN_NINST];
+    const snd_inst_t *in;
     snd_voice_t *v = 0;
+    if (inst == TI_SOFTBASS && snd_phones) inst = TI_DEEPBASS;   /* (the speaker plays nothing below ~100 Hz: harmonics there) */
+    in = &SND_INST[inst % TN_NINST];
     uint32_t i, base = snd_inc(midi), oldest = 0, vq;
     for (i = 0; i < TN_VOICES; i++)             /* a free voice, else the quietest of the oldest half */
         if (!snd_v[i].on) { v = &snd_v[i]; break; }
