@@ -12,14 +12,26 @@
 static void app_idle(void);
 #define LCD_IDLE app_idle                       /* while a band goes out by DMA: the keys still ring */
 #define APP_NAME "TINSEL"
-#define FM1_LED_LEVELS                          /* per-LED brightness (hal/fm1_input.h) */
+#ifndef TN_NO_LED_LEVELS
+#define FM1_LED_LEVELS                          /* per-LED brightness (hal/fm1_input.h); TN_NO_LED_LEVELS: Dinghy's lit and glow only */
+#endif
 #ifndef TN_LCD_BAUD
 #define TN_LCD_BAUD 4u                          /* 12 MHz, Dinghy's: the safe one until a unit has shown a faster one works */
 #endif
 #define LCD_BAUD TN_LCD_BAUD
+#ifndef TN_NO_SAVE
+#define TN_NO_SAVE 0
+#endif
 #include "platform.c"
 #ifdef DINGHY_HOST
 #define TN_POOL
+#endif
+#if defined(TN_NO_LED_LEVELS) && !defined(DINGHY_HOST)
+static void fm1_led_level(uint32_t id, uint32_t lvl)   /* (the safe build: two levels, as Dinghy has them) */
+{
+    fm1_led_key(id, lvl >= 24u);
+    fm1_led_key_glow(id, lvl && lvl < 24u);
+}
 #endif
 #include "tn_ui.h"
 #include "tn_set.h"
@@ -215,7 +227,7 @@ static void app_main(void)
             idle_ok = 0;
             leds_out();
         }
-        if (set_dirty && !snd_active() && fm1_ms - set_changed_at > 2000u) {   /* saved when silent (an erase stalls the sound) */
+        if (set_dirty && !snd_active() && !snd_peak && fm1_ms - set_changed_at > 2000u && !TN_NO_SAVE) {   /* saved when silent (an erase stalls the sound) */
             settings_save(&set, sizeof set);
             set_dirty = 0;
         }

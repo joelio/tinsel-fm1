@@ -1,140 +1,68 @@
-<p align="center"><img src="assets/logo.svg" width="96" alt="Dinghy"></p>
+# Tinsel
 
-# Dinghy
+**Christmas music toys and games for the M-VAVE FM-1, all in one firmware, for every age.**
 
-**The smallest firmware for the M-VAVE FM-1 to build your own on.**
+<p align="center"><img src="docs/screens.png" width="720" alt="Tinsel's screens: the Grotto with its tree and robin, the Sleigh menu, the Carol Book playing Jingle Bells, Present Catch, the Advent calendar's house, the grown-up panel"></p>
 
-Dinghy plays a sine wave on the keys, and that is all it does. Under it is everything an FM-1 firmware needs
-before it can be any fun: the update path, the USB rescue, MIDI over USB and the TRS jack (with clock), USB audio, the
-keys, knobs and LEDs, the screen, flash storage, and the same again for the M-Vave SMK-37. It all works, so you start
-with the part you actually want to write.
+Switch it on and you are in the **Grotto**: a Christmas tree with a bauble above every key. Press a key and its
+bell rings and its bauble lights; press them all and the sleigh bells go. Turn any knob and a robin flies about,
+and whatever it lands on does something (the presents pop, the snowman's hat hops, the star sparkles). PLAY is the
+big moment: a fanfare and a snowstorm. Nothing in the Grotto can go wrong, and nothing in it changes a setting.
 
-```
-firmware/src/dinghy.c     <- your firmware: ~300 lines, a 4-voice sine. Start here.
-firmware/src/platform.c   <- the plumbing (boot, USB, MIDI, updates, audio ISR, storage). Done; read it, don't fight it.
-firmware/src/store.h      <- where your data lives in flash, per board
-firmware/src/*.c, hal/    <- Felucca's platform, as SLOOP / sloopDX / OberVave carry it; the SMK-37 layer
-```
-
-Dinghy is based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (Hügelton Instruments), with its
-platform as [SLOOP](https://github.com/isod89/sloop-fm1) (isod89) carries it: it keeps that platform and throws away the
-rest. The smallest boat of the family, after the felucca and the sloop.
-
-<p align="center"><img src="docs/screen.png" width="240" alt="Dinghy's screen: the name, the note played, a keyboard with the keys that sound"></p>
-
-> **Status: 0.5.** 0.5 runs on newer FM-1s too: their flash chip, the UC25HQ80 (0xB36014), beside the Puya (0x856014);
-> before, a firmware built on Dinghy saved to RAM only on them. Dinghy's platform runs on the FM-1 in VIBE FM Link
-> (zvenson/vibe-link), tested there on 7.11.2026. 0.3 was tested on the FM-1: the install, MIDI in (pitch exact, 4 voices), USB audio at
-> 44.1 / 48 kHz, the keys, the screen, the octave kept in flash, and back to another firmware through the hub.
-> 0.4 brings OberVave's platform over: the TRS MIDI IN, the clock, blobs and slots, the loader's screen, the SMK-37.
-> That code runs on the device in OberVave (FM-1 and SMK-37); Dinghy 0.4 itself is tested on the host only so far.
-
-## What you get
+**HOME** goes back to the Grotto from anywhere. In the Grotto, HOME opens **the Sleigh**, a menu of big pictures:
 
 | | |
 | --- | --- |
-| **Updates that always work** | `tools/fm1_install.py`, the web installers and the [FM-1 Firmware Hub](https://thefirmwarehub.com) reach your firmware over USB, so you (and your users) can always install the next build, or go back to the official firmware. |
-| **USB rescue** | Hold **OCT-** while switching on: no sound, only the updater. If your firmware crashes twice at boot, the FM-1 goes there by itself. |
-| **MIDI** | USB in and out (class compliant) and the FM-1's TRS MIDI IN, in one queue: `midi_get()` says where a message came from, `midi_send()`. Clock, start, stop and continue reach your app. |
-| **USB audio** | The FM-1 shows up as a 16-bit stereo audio input (44.1 or 48 kHz): record it into any DAW or phone. Nothing to do. |
-| **Panel** | 27 keys, 14 buttons, 7 encoders, the MASTER knob, the LEDs, by name (`BTN_PLAY`, `ENC_KNOB1`, ...). |
-| **Screen** | 240 x 240, text in two sizes, rectangles, lines, pixels. |
-| **Storage** | `settings_*` (4 KB), 8 blobs of 4 KB (`blob_*`), 8 slots of 16 KB (`slot_*`), each with a CRC, in places no other part of the flash is in reach of. |
-| **Never waits for the screen** | `LCD_IDLE`: your app reads MIDI and the keys while the screen's DMA runs, so a chord never stumbles over a redraw. |
-| **The SMK-37 too** | `./build.sh --board smk37` (Pro, Elite, MKE-P37): the same app on M-Vave's 37-key keyboard, with velocity, outer keys, 16 coloured pads, faders and wheels. [docs/SMK37.md](docs/SMK37.md) |
-| **An update screen** | The update loader draws your name in your colour, a progress bar and what to do, also after an install was cut off (FM-1). |
-| **A crash screen** | A fault shows where it happened (the PC), then the FM-1 restarts. |
-| **Host mode** | The same `dinghy.c` on your computer: the screen as an image, the sound as a WAV, scripted keys, knobs, MIDI (USB and TRS, a clock), SMK-37 pads and wheels. No FM-1 needed to try an idea. |
-| **Tests and CI** | `tests/run_tests.sh`: the host app, the flash maps, the update path, the loader, the installer. A tag `vX.Y` on GitHub builds, tests and releases the packages with a build attestation. |
-| **Checks** | The build fails on what bricks or breaks an FM-1 firmware: a 64-bit division, a call into the chip ROM, too much RAM, a register touched outside `hal/`. |
+| **The Carol Book** | Eight carols, three ways. *Magic*: any key plays the next note, so a toddler bashing the keys plays Jingle Bells. *Follow*: the next key lights up and the band waits for you. *Listen*: it plays itself. |
+| **Present Catch** | Presents fall towards seven chimneys; the keys under the lowest one light up. Every catch plays the next note of Jingle Bells. At *Little Elf* (the default) nothing is ever missed. |
+| **The Advent calendar** | A house with 24 windows; the first 24 keys are the doors. Each door holds a carol, a joke, a sound or a new decoration for the Grotto. It learns the date from [web/advent.html](web/advent.html) (Chrome or Edge, over USB), or counts the days it is switched on. |
+| *More presents* | Wrapped, for later in December: the Music Box, the Bell Tower, Jingle It!, the Snow Globe, Snowball Rally, Cracker Pull, Sleigh Ride. |
 
-## Build your own
+A brightly lit key means *press me*; a glowing one means *next*. Holding **EDIT and SAVE together for two seconds**
+opens the grown-up panel: the volume ceiling (gentle by default, for small ears), the games' levels (Little Elf, Elf,
+Santa), the calendar, the date, the high scores. Nothing a small hand does outside the panel deletes anything.
 
-From nothing to your own firmware on the FM-1, step by step. Each step works before you go to the next.
+The grown-ups' guide: **[docs/GUIDE.md](docs/GUIDE.md)**. The design and the research behind it:
+[docs/DESIGN.md](docs/DESIGN.md), [docs/RESEARCH-NOTES.md](docs/RESEARCH-NOTES.md).
 
-### 1. Copy it
+Unofficial: not made or endorsed by M-VAVE. Installing firmware is at your own risk.
 
-On GitHub: **Use this template** (top right on this page) or fork it, then clone your copy. Rename nothing yet:
-first make sure the unchanged Dinghy builds on your machine.
+## Installing
 
-### 2. Set up once
+Tinsel's package identity is **FM-1_902**. Install `tinsel-X.Y.fwsc` from the releases like any community firmware:
+with the [FM-1 Firmware Hub](https://thefirmwarehub.com), M-Flasher's download mode, or
+`python3 tools/fm1_install.py tinsel-X.Y.fwsc`. The way back is the same, with another firmware or M-VAVE's own.
 
-You need Linux on x86-64 (or macOS / Windows with Docker or WSL), Python 3 with Pillow, the JieLi toolchain
-and three files of the JieLi AC79 SDK:
+Tinsel keeps its settings and the calendar in its own corner of the FM-1's flash (0xB7000..0xDFFFF), so going back
+and forth between Tinsel and another Dinghy-based firmware (Melisma, Dinghy itself) leaves the other's saved data
+alone.
 
-```sh
-pip3 install Pillow mido python-rtmidi
-tools/get_toolchain.sh                      # JieLi's clang for the chip, to ~/.jieli/toolchain
-git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
-    https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
-```
+## Building and checking
 
-On macOS the build runs the toolchain in a `linux/amd64` Docker container by itself (have Docker running).
-`JIELI_TOOLCHAIN` and `AC79_SDK` point elsewhere if your copies live somewhere else.
-
-### 3. Hear it without an FM-1
+Tinsel is built on [Dinghy](https://github.com/zvenson/dinghy): everything in [docs/DINGHY.md](docs/DINGHY.md)
+(the toolchain, the SDK, Docker on macOS) applies.
 
 ```sh
-tests/run_host.sh                           # -> build/host/dinghy.wav and screen PNGs
+tools/check.sh            # the carols, the unit tests, a host run through every screen (seconds)
+tools/check.sh --full     # then the device build, the platform's tests, the sound's heaviest moment and a boot in fm1-emu
+tests/run_host.sh tests/scripts/tinsel.txt   # the screens as PNG and the sound as WAV, in build/host/
+./build.sh --release 0.1  # build/tinsel-0.1.fwsc
 ```
 
-Host mode runs the same `dinghy.c` on your computer: the sound as a WAV, the screen as images. Most ideas can be
-tried here first, in seconds.
+- `firmware/src/tinsel.c` is the app: the screens, the loop, what is kept. Each screen is a header
+  (`tn_grotto.h`, `tn_sleigh.h`, `tn_carolbook.h`, `tn_catchgame.h`, `tn_adventscr.h`, `tn_panel.h`).
+- `tn_snd.h` is the sound: bells, celesta, music box, glockenspiel, sleigh bells, a cathedral reverb, and a
+  ceiling the sound never passes.
+- `tn_gfx.h` draws a byte a pixel and sends the panel only what changed.
+- The rules of the carol player, the game and the calendar are pure (`tn_carol.h`, `tn_catch.h`, `tn_advent.h`),
+  and `tests/tn_test.c` checks them.
+- The carols are our own transcriptions, one text file each in [music/](music/). `tools/gen_music.py` checks
+  every bar and makes `firmware/gen/tn_music.h`. Only public-domain melodies are used; see
+  [music/README.md](music/README.md).
 
-### 4. Your first change
+## Credits and licence
 
-Open [firmware/src/dinghy.c](firmware/src/dinghy.c) (~200 lines). The sound is `app_audio()`: it gets an empty
-buffer of stereo frames and adds to it. Make the sine a square:
-
-```c
-s = ((int32_t)ph < 0 ? 8000 : -8000) * amp >> 15;     /* instead of s = (sine(ph) * amp) >> 15; */
-```
-
-Run `tests/run_host.sh` again and listen to `build/host/dinghy.wav`. The screen is drawn in `app_main()`, the keys
-are read there too: change the text, add a knob ([docs/API.md](docs/API.md) has every call).
-
-### 5. Onto the FM-1
-
-```sh
-./build.sh                                       # -> build/dinghy.fwsc (fails on what would brick the FM-1)
-python3 tools/fm1_install.py build/dinghy.fwsc   # over USB; asks before it writes, restarts into your build
-python3 tools/fm1_install.py --info              # what runs on the connected FM-1
-```
-
-That is the whole loop: change, hear it on the host, build, install. Back to another firmware, or to the official
-one, with the [FM-1 Firmware Hub](https://thefirmwarehub.com) in Chrome or Edge: Dinghy (and every copy of it)
-answers the hub's updater like every firmware there. Installing firmware is at your own risk.
-
-### 6. When it goes wrong
-
-- **It crashes:** the screen shows where (the PC), then the FM-1 restarts. Twice at boot and it goes to the
-  USB rescue by itself.
-- **It won't start at all:** hold **OCT-** while switching on: the USB rescue, no sound, only the updater. Install
-  a working build (or another firmware from the hub) from there.
-- **The build refuses:** it checks for a 64-bit division, a call into the chip ROM, too much RAM, a register touched
-  outside `hal/`. [docs/RULES.md](docs/RULES.md) says why each one matters; read it before your first crash.
-
-### 7. Make it yours, release it, get into the hub
-
-Your name and logo, your own package identity (so the FM-1 and the installers tell your firmware from Dinghy),
-a GitHub release with the `.fwsc`, and how to get listed next to the others in the
-[FM-1 Firmware Hub](https://thefirmwarehub.com): **[docs/MAKE-IT-YOURS.md](docs/MAKE-IT-YOURS.md)**.
-
-## Where to go next
-
-- **[docs/API.md](docs/API.md)**: everything `platform.c` gives you, with the panel's ids, the screen calls, the
-  audio contract, MIDI, storage, the flash map, timing, the SMK-37.
-- **[docs/SMK37.md](docs/SMK37.md)**: building and installing for the M-Vave SMK-37.
-- **[docs/MAKE-IT-YOURS.md](docs/MAKE-IT-YOURS.md)**: turn Dinghy into your firmware: the name, the package
-  identity, releases, getting into the FM-1 Firmware Hub.
-- **[docs/RULES.md](docs/RULES.md)**: the chip's rules (no FPU, no libgcc, the audio ISR's budget) and what the build
-  checks for you. Read it before your first crash, not after.
-
-## License
-
-GPL-3.0-only, as Felucca and SLOOP: you may change and share it, and whoever gets your firmware gets its source.
-Details, credits and third-party parts in [LICENSING.md](LICENSING.md).
-
-The platform is Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments, with SLOOP's changes (isod89);
-the SMK-37 layer by M. Geisler (genkigenki); the loader's screen after Skiff (illuminus5). Dinghy (the app, the host
-mode, the docs) by zvenson.
+GPL-3.0-only. Tinsel is by **Joel Merrick**. It stands on [Dinghy](https://github.com/zvenson/dinghy) (zvenson),
+which stands on [Felucca](https://github.com/hugelton/Felucca) (Leo Kuroshita, Hügelton Instruments) and
+[SLOOP](https://github.com/isod89/sloop-fm1) (isod89). The details, and everyone else whose work or ideas are in
+here, are in [LICENSING.md](LICENSING.md).

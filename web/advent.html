@@ -1,0 +1,52 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only. Copyright (C) 2026 Joel Merrick. -->
+<!-- Tinsel's Advent date: tells a Tinsel FM-1 today's date over USB-MIDI (Chrome or Edge; Safari has no Web MIDI).
+     Four control changes on channel 16: CC 85 year - 2000, CC 86 month, CC 87 day, CC 88 (y + m + d) & 127.
+     Nothing else is sent, and nothing leaves this page. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tinsel: today's date</title>
+<style>
+  :root { --bg: #0a1230; --fg: #f0f8ff; --gold: #ffcc00; --red: #de1e2c; --dim: #8a94b8; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
+         font: 18px/1.5 system-ui, sans-serif; }
+  main { max-width: 30rem; padding: 2rem 1rem; text-align: center; }
+  h1 { color: var(--gold); font-size: 2.4rem; margin: 0 0 .5rem; letter-spacing: .1em; }
+  .ribbon { background: var(--red); padding: .4rem 0; margin-bottom: 1.5rem; }
+  button { font: inherit; font-size: 1.3rem; padding: .8rem 2rem; border: 0; border-radius: .5rem; background: var(--gold);
+           color: #3a2a00; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #say { min-height: 3em; margin-top: 1.5rem; }
+  small { color: var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <div class="ribbon"><h1>TINSEL</h1></div>
+  <p>Plug the FM-1 into this computer with Tinsel running, then press the button. Tinsel learns today's date, and the
+     Advent calendar opens the doors up to today.</p>
+  <p><button id="go">Tell Tinsel the date</button></p>
+  <p id="say"></p>
+  <p><small>Needs Chrome or Edge. The page sends four MIDI messages to the FM-1 and nothing anywhere else.</small></p>
+</main>
+<script>
+const say = t => document.getElementById('say').textContent = t;
+document.getElementById('go').onclick = async () => {
+  if (!navigator.requestMIDIAccess) { say('This browser has no Web MIDI: try Chrome or Edge.'); return; }
+  let midi;
+  try { midi = await navigator.requestMIDIAccess(); } catch (e) { say('The browser said no to MIDI: ' + e.message); return; }
+  const outs = [...midi.outputs.values()];
+  const fm1 = outs.filter(o => /fm-?1|tinsel|dinghy|m-?vave/i.test(o.name));
+  const targets = fm1.length ? fm1 : outs;
+  if (!targets.length) { say('No MIDI device found. Is the FM-1 plugged in and switched on?'); return; }
+  const d = new Date(), y = d.getFullYear() - 2000, m = d.getMonth() + 1, day = d.getDate();
+  const msg = [[0xBF, 85, y], [0xBF, 86, m], [0xBF, 87, day], [0xBF, 88, (y + m + day) & 127]];
+  for (const o of targets) for (const [a, b, c] of msg) o.send([a, b, c]);
+  say(`Sent ${day} ${d.toLocaleString('en-GB', {month: 'long'})} ${d.getFullYear()} to ${targets.map(o => o.name).join(', ')}. ` +
+      'Listen for a twinkle.');
+};
+</script>
+</body>
+</html>

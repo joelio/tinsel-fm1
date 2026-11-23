@@ -417,7 +417,9 @@ static void snd_render(int32_t *out, uint32_t n)
         int32_t gi = g0 + (g - g0) * (int32_t)(i >> 1) / (int32_t)n, x = out[i];
         if (x > (1 << 20)) x = 1 << 20;
         if (x < -(1 << 20)) x = -(1 << 20);
-        x = (x >> 4) * (gi >> 4) >> 7;           /* x g / 32768, in 32 bits */
+        if (x > -24 && x < 24) x = 0;            /* the tail ends in true silence (shifts round negatives down: a hum of -1s) */
+        else if (x < 0) x = -((-x >> 4) * (gi >> 4) >> 7);
+        else x = (x >> 4) * (gi >> 4) >> 7;      /* x g / 32768, in 32 bits, the same both ways */
         if (x > ceil) x = ceil;
         if (x < -ceil) x = -ceil;
         out[i] = x;
