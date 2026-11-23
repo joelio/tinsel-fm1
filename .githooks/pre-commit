@@ -1,0 +1,3 @@
+#!/bin/sh
+# Tinsel: the quick checks before a commit (tools/check.sh). Skip once with git commit --no-verify.
+exec tools/check.sh
