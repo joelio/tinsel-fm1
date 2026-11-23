@@ -6,15 +6,20 @@
 #ifndef TN_PANEL_H
 #define TN_PANEL_H
 
-enum { PN_VOLUME, PN_CATCH, PN_ALL, PN_OPEN_ALL, PN_CLOSE_ALL, PN_DATE, PN_SCORES, PN_SCREEN, PN_ABOUT, PN_COUNT };
-static const char *const PN_NAME[PN_COUNT] = {"VOLUME", "PRESENT CATCH", "ALL GAMES", "ADVENT: OPEN ALL", "ADVENT: CLOSE ALL",
-                                              "DATE", "HIGH SCORES", "SCREEN TEST", "ABOUT"};
+enum { PN_VOLUME, PN_LV_CATCH, PN_LV_JINGLE, PN_LV_CRACKER, PN_LV_RALLY, PN_LV_RIDE, PN_LV_BELLS, PN_ALL, PN_BOX_KEEP,
+       PN_BOX_CLEAR, PN_OPEN_ALL, PN_CLOSE_ALL, PN_DATE, PN_SCORES, PN_SCREEN, PN_ABOUT, PN_COUNT };
+static const char *const PN_NAME[PN_COUNT] = {"VOLUME", "PRESENT CATCH", "JINGLE IT!", "CRACKER PULL", "SNOWBALL RALLY",
+                                              "SLEIGH RIDE", "BELL TOWER", "ALL GAMES", "MUSIC BOX: KEEP TUNE",
+                                              "MUSIC BOX: CLEAR KEPT", "ADVENT: OPEN ALL", "ADVENT: CLOSE ALL", "DATE",
+                                              "HIGH SCORES", "SCREEN TEST", "ABOUT"};
+#define PN_GAME(i) ((i) - PN_LV_CATCH)           /* PN_LV_... -> GM_... (the same order) */
+#define PN_ROWS 9u
 static const char *const PN_LEVEL[3] = {"LITTLE ELF", "ELF", "SANTA"};
 static const char *const PN_VOL[3] = {"GENTLE", "MEDIUM", "FULL"};
 static const char *const PN_MON[12] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 static const uint8_t PN_BAUDS[5] = {4, 3, 2, 1, 0};   /* SPI1: 60 MHz / (b + 1): 12, 15, 20, 30, 60 MHz */
 static struct {
-    uint8_t at, asking, baud_i, changed;
+    uint8_t at, top, asking, baud_i, changed, kept;
     uint32_t t_asked, t_frame, frames, flush_ms;
 } pn;
 
@@ -28,7 +33,7 @@ static void pn_set_baud(uint32_t b)
 #endif
 }
 
-static void pn_enter(void) { pn.at = 0; pn.asking = 0; pn.changed = 0; pn.baud_i = 0; snd_ping(TI_CELESTA, 72, 70, 0); }
+static void pn_enter(void) { pn.at = 0; pn.top = 0; pn.asking = 0; pn.changed = 0; pn.baud_i = 0; pn.kept = 0; snd_ping(TI_CELESTA, 72, 70, 0); }
 static void pn_leave(void)
 {
     pn_set_baud(TN_LCD_BAUD);                   /* (the test's speed is never kept) */
@@ -54,15 +59,19 @@ static void pn_input(const tn_input_t *in)
         pn.at = (uint8_t)((pn.at + PN_COUNT + (uint32_t)(mv > 0 ? 1 : (int32_t)PN_COUNT - 1)) % PN_COUNT);
         pn.asking = 0;
         if (pn.at != PN_SCREEN) pn_set_baud(TN_LCD_BAUD);
+        if (pn.at < pn.top) pn.top = pn.at;
+        if (pn.at >= pn.top + PN_ROWS) pn.top = (uint8_t)(pn.at - PN_ROWS + 1u);
+        pn.kept = 0;
         snd_ping(TI_CHIME, 84, 40, 0);
     }
     if (ch) {
         int32_t s = ch > 0 ? 1 : -1;
         switch (pn.at) {
         case PN_VOLUME: set.ceiling = (uint8_t)((set.ceiling + 3u + (uint32_t)s) % 3u); snd_set_ceiling(TN_CEILINGS[set.ceiling]); pn.changed = 1; snd_fx(SFX_CHEER); break;
-        case PN_CATCH: set.level[0] = (uint8_t)((set.level[0] + 3u + (uint32_t)s) % 3u); pn.changed = 1; break;
+        case PN_LV_CATCH: case PN_LV_JINGLE: case PN_LV_CRACKER: case PN_LV_RALLY: case PN_LV_RIDE: case PN_LV_BELLS:
+            set.level[PN_GAME(pn.at)] = (uint8_t)((set.level[PN_GAME(pn.at)] + 3u + (uint32_t)s) % 3u); pn.changed = 1; break;
         case PN_ALL: { uint8_t l = (uint8_t)((set.level[0] + 3u + (uint32_t)s) % 3u); for (i = 0; i < 8u; i++) set.level[i] = l; pn.changed = 1; break; }
-        case PN_OPEN_ALL: case PN_CLOSE_ALL: case PN_SCORES: pn.asking = 1; pn.t_asked = in->now; break;
+        case PN_BOX_KEEP: case PN_BOX_CLEAR: case PN_OPEN_ALL: case PN_CLOSE_ALL: case PN_SCORES: pn.asking = 1; pn.t_asked = in->now; break;
         case PN_DATE: pn_date_step(s); break;
         case PN_SCREEN: pn.baud_i = (uint8_t)((pn.baud_i + 5u + (uint32_t)s) % 5u); pn_set_baud(PN_BAUDS[pn.baud_i]); pn.frames = 0; pn.flush_ms = 0; break;
         default: break;
@@ -73,6 +82,8 @@ static void pn_input(const tn_input_t *in)
         if (pn.at == PN_OPEN_ALL) { set.adv_all = 1; set.doors = ADV_ALL; }
         if (pn.at == PN_CLOSE_ALL) { set.doors = 0; set.adv_all = 0; set.power_days = 0; }
         if (pn.at == PN_SCORES) memset(set.best, 0, sizeof set.best);
+        if (pn.at == PN_BOX_KEEP) { if (!mb.loaded) mb_enter(); pn.kept = (uint8_t)(mb_keep_scribble() ? 1u : 2u); }
+        if (pn.at == PN_BOX_CLEAR) { if (!mb.loaded) mb_enter(); mb_clear_kept(); }
         pn.asking = 0;
         pn.changed = 1;
         snd_fx(SFX_DOOR);
@@ -87,9 +98,12 @@ static void pn_value(uint32_t i, char *b)
     b[0] = 0;
     switch (i) {
     case PN_VOLUME: pn_copy(b, PN_VOL[set.ceiling]); break;
-    case PN_CATCH: pn_copy(b, PN_LEVEL[set.level[0] % 3u]); break;
+    case PN_LV_CATCH: case PN_LV_JINGLE: case PN_LV_CRACKER: case PN_LV_RALLY: case PN_LV_RIDE: case PN_LV_BELLS: pn_copy(b, PN_LEVEL[set.level[PN_GAME(i)] % 3u]); break;
     case PN_ALL: memcpy(b, "TURN", 5); break;
-    case PN_OPEN_ALL: case PN_CLOSE_ALL: case PN_SCORES: memcpy(b, pn.asking && pn.at == i ? "PLAY: YES" : "TURN", pn.asking && pn.at == i ? 10 : 5); break;
+    case PN_BOX_KEEP:
+        if (pn.kept && pn.at == i) { pn_copy(b, pn.kept == 1u ? "KEPT" : "NOTHING TO KEEP"); break; }
+        /* fall through */
+    case PN_BOX_CLEAR: case PN_OPEN_ALL: case PN_CLOSE_ALL: case PN_SCORES: memcpy(b, pn.asking && pn.at == i ? "PLAY: YES" : "TURN", pn.asking && pn.at == i ? 10 : 5); break;
     case PN_DATE:
         if (!set.date_y) { memcpy(b, "NOT TOLD", 9); break; }
         p = tn_utoa(p, set.date_d); *p++ = ' '; memcpy(p, PN_MON[set.date_m - 1u], 3); p += 3; *p++ = ' '; tn_utoa(p, set.date_y);
@@ -131,8 +145,8 @@ static void pn_draw(uint32_t now)
     g_clear(P_NIGHT);
     g_text(12, 8, &FONT_S, "FOR GROWN-UPS", P_GOLD, P_GOLD_AA);
     g_rect(12, 26, 216, 1, P_DIM);
-    for (i = 0; i < PN_COUNT; i++) {
-        int32_t y = 34 + (int32_t)i * 20;
+    for (i = pn.top; i < PN_COUNT && i < pn.top + PN_ROWS; i++) {
+        int32_t y = 34 + (int32_t)(i - pn.top) * 20;
         if (i == pn.at) g_rect(6, y - 2, 228, 20, P_NIGHT3);
         g_text(12, y, &FONT_S, PN_NAME[i], i == pn.at ? P_SNOW : P_GREY, i == pn.at ? P_TEXT_AA : 0xFFu);
         pn_value(i, b);

@@ -61,7 +61,8 @@ static uint32_t tn_pulse(uint32_t now, uint32_t lo, uint32_t hi)   /* an LED lev
 /* the pictures (drawn in tn_pics.h) */
 enum {
     PIC_BELLS, PIC_PUDDING, PIC_HOLLY, PIC_STAR, PIC_CROWN, PIC_ANGEL, PIC_CANDLE, PIC_BELL,   /* the carols' (CP_...) */
-    PIC_TREE, PIC_BOOK, PIC_PRESENT, PIC_HOUSE, PIC_WRAPPED, PIC_WAND, PIC_EAR, PIC_FOLLOW, PIC_COUNT
+    PIC_TREE, PIC_BOOK, PIC_PRESENT, PIC_HOUSE, PIC_WRAPPED, PIC_WAND, PIC_EAR, PIC_FOLLOW,
+    PIC_MUSICBOX, PIC_GLOBE, PIC_SNOWBALL, PIC_CRACKER, PIC_SLEIGH, PIC_COUNT
 };
 
 /* a number as text (no printf on the chip) */

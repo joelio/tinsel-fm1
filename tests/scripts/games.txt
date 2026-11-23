@@ -1,0 +1,127 @@
+# Tinsel on the host: every toy and game after the first ones (made by hand; each Sleigh step is its own knob event).
+1500 keys 0x1
+1600 keys 0
+2000 btn 8
+2150 enc 0 1
+2300 enc 0 1
+2450 enc 0 1
+2600 enc 0 1
+2850 btn 12
+3150 enc 2 6
+3350 enc 2 6
+3650 shot
+3750 btn 1
+3850 btn 1
+3950 btn 1
+4050 btn 1
+4150 keys 0x101
+4250 keys 0
+4350 enc 2 3
+4450 keys 0x4010
+4550 keys 0
+4750 enc 2 3
+4950 shot
+5150 btn 12
+6650 shot
+7250 btn 8
+7450 btn 8
+7600 enc 0 1
+7850 btn 12
+8050 enc 2 1
+8250 enc 2 1
+8450 enc 2 1
+8750 shot
+8850 btn 12
+11350 shot
+11450 btn 12
+11650 enc 2 -1
+11850 enc 2 -1
+12050 enc 2 -1
+12250 btn 12
+12850 keys 0x10
+12930 keys 0
+14130 keys 0x10
+14210 keys 0
+16210 shot
+16310 btn 12
+16910 btn 8
+17110 btn 8
+17260 enc 0 1
+17510 btn 12
+17810 shot
+18010 btn 12
+19510 shot
+19610 keys 0x2000
+19660 keys 0
+19760 enc 3 2
+19860 btn 2
+21060 shot
+21660 btn 8
+21860 btn 8
+22010 enc 0 1
+22260 btn 12
+22460 keys 0x40000
+22560 keys 0
+22660 enc 2 8
+22760 enc 3 -8
+23060 shot
+26060 shot
+26660 btn 8
+26860 btn 8
+27010 enc 0 1
+27260 btn 12
+27560 shot
+27760 btn 12
+29260 shot
+30060 enc 2 -4
+31260 shot
+31860 btn 8
+32060 btn 8
+32210 enc 0 1
+32460 btn 12
+32660 shot
+32860 btn 12
+33160 keys 0x1
+33210 keys 0
+33510 keys 0x2
+33560 keys 0
+33860 keys 0x4
+33910 keys 0
+34210 keys 0x8
+34260 keys 0
+34560 keys 0x10
+34610 keys 0
+34910 keys 0x1
+34960 keys 0
+35260 keys 0x2
+35310 keys 0
+35610 keys 0x4
+35660 keys 0
+35960 keys 0x8
+36010 keys 0
+36310 keys 0x10
+36360 keys 0
+36660 keys 0x1
+36710 keys 0
+37010 keys 0x2
+37060 keys 0
+37260 shot
+41260 shot
+43260 shot
+43860 btn 8
+44060 btn 8
+44210 enc 0 1
+44460 btn 12
+44760 shot
+44960 btn 12
+47460 shot
+47560 keys 0x7FFFFFF
+47660 keys 0
+49460 shot
+49960 btndown 6
+50960 shot
+51060 btndown 9
+51960 shot
+52060 btnup 9
+52060 btnup 6
+52560 end

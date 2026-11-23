@@ -16,6 +16,7 @@ typedef struct {
     uint8_t adv_all, pad[2];                    /* the grown-up opened the whole calendar */
     uint16_t best[8];                           /* high scores (0: Present Catch) */
 } tn_settings_t;
+enum { GM_CATCH, GM_JINGLE, GM_CRACKER, GM_RALLY, GM_RIDE, GM_BELLS, GM_COUNT };   /* level[] and best[] */
 static const uint16_t TN_CEILINGS[3] = {16384, 22937, 32767};   /* gentle 50 %, medium 70 %, full */
 
 static void tn_set_defaults(tn_settings_t *s) { memset(s, 0, sizeof *s); s->ver = TN_SET_VER; }

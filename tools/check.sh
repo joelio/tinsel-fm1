@@ -16,6 +16,8 @@ cc -O1 -Wall -Wextra -Wno-unused-function -Wno-unused-const-variable -Ifirmware/
 rm -f "$OUT"/dinghy-*.png "$OUT"/dinghy-*.ppm
 PATH="$(dirname "$PY"):$PATH" sh tests/run_host.sh tests/scripts/tinsel.txt >"$OUT/host.log" 2>&1 || { tail -20 "$OUT/host.log"; exit 1; }
 echo "host     $(grep -c 'screen ->' "$OUT/host.log") screens, $(grep 'sound' "$OUT/host.log" | sed 's/.*(\(.*\))/\1/')"
+PATH="$(dirname "$PY"):$PATH" sh tests/run_host.sh tests/scripts/games.txt >"$OUT/games.log" 2>&1 || { tail -20 "$OUT/games.log"; exit 1; }
+echo "games    $(grep -c 'screen ->' "$OUT/games.log") screens through every toy and game"
 [ "$1" = "--full" ] || exit 0
 
 export JIELI_TOOLCHAIN="${JIELI_TOOLCHAIN:-$(cd .jieli/toolchain && pwd -P)}" AC79_SDK="${AC79_SDK:-$(cd .sdk && pwd -P)}" PYTHON="$PY"

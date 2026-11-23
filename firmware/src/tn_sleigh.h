@@ -11,13 +11,13 @@ static const sl_item_t SL_ITEMS[] = {
     {PIC_BOOK, SC_CAROL, "CAROL BOOK", {79, 77, 76}},
     {PIC_PRESENT, SC_CATCH, "PRESENT CATCH", {67, 72, 79}},
     {PIC_HOUSE, SC_ADVENT, "ADVENT", {84, 79, 84}},
-    {PIC_WRAPPED, 255, "MUSIC BOX", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "BELL TOWER", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "JINGLE IT!", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "SNOW GLOBE", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "SNOWBALL RALLY", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "CRACKER PULL", {0, 0, 0}},
-    {PIC_WRAPPED, 255, "SLEIGH RIDE", {0, 0, 0}},
+    {PIC_MUSICBOX, SC_MUSICBOX, "MUSIC BOX", {84, 88, 91}},
+    {PIC_BELL, SC_BELLS, "BELL TOWER", {69, 65, 60}},
+    {PIC_BELLS, SC_JINGLE, "JINGLE IT!", {76, 76, 76}},
+    {PIC_GLOBE, SC_GLOBE, "SNOW GLOBE", {91, 88, 84}},
+    {PIC_SNOWBALL, SC_RALLY, "SNOWBALL RALLY", {72, 84, 72}},
+    {PIC_CRACKER, SC_CRACKER, "CRACKER PULL", {60, 67, 72}},
+    {PIC_SLEIGH, SC_RIDE, "SLEIGH RIDE", {67, 71, 74}},
 };
 #define SL_N (sizeof SL_ITEMS / sizeof SL_ITEMS[0])
 static struct { uint8_t at; int32_t dir; uint32_t t_move, t_nope; } sl;

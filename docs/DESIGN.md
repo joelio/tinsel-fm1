@@ -1,6 +1,7 @@
 # Design: Tinsel for the M-VAVE FM-1
 
-Status: approved, 23 November 2026 (builder-checked; the answers on testing, the public
+Status: approved 23 November 2026; everything in sections 7 and 8.1 to 8.5 is built (23 November). Not yet:
+the speaker/headphone switch for the bass (9.3), voice clips (9.4), 8.6. Originally:, 23 November 2026 (builder-checked; the answers on testing, the public
 release and the voice clips folded in).
 Name: **Tinsel**. A Christmas firmware of music toys and games, all in one, for every age.
 Credits: Joel Merrick, standing on Dinghy (zvenson), Felucca (Leo Kuroshita, Hügelton Instruments) and SLOOP

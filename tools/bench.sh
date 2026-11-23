@@ -1,7 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# Tinsel's heaviest moment in fm1-emu: every key at once, PLAY's fanfare, a sparkle, the lights chasing, the robin
-# flying. A test build (TN_BENCH) leaves the audio interrupt's times in RAM; this prints them.
+# Tinsel's heaviest moments in fm1-emu: every key at once in the Grotto, PLAY's fanfare, a sparkle, the lights chasing,
+# the robin flying; then the Bell Tower, every bell struck and then rung. A test build (TN_BENCH) leaves the audio interrupt's times in RAM; this prints them.
 #   tools/bench.sh [MHZ]        default 240 (the emulator's; the unit runs 360 or 320)
 set -e
 cd "$(dirname "$0")/.."
@@ -14,8 +14,12 @@ mkdir -p build/emu && cp build/dinghy.fwsc build/emu/bench.fwsc
 K=""; t=3500
 for n in F3 F#3 G3 G#3 A3 A#3 B3 C4 C#4 D4 D#4 E4 F4 F#4 G4 G#4 A4 A#4 B4 C5 C#5 D5 D#5 E5 F5 F#5 G5; do K="$K$t:$n@100,"; done
 K="${K}3900:PLAY,4000:PLAY^,4100:ARP,4200:ARP^,4300:e2:+10,4500:e3:-8,5000:GLO,5100:GLO^,5400:F3^,5400:C4^,5400:G5^"
-cd build/emu
-FM1_DUMPRAM=bench-ram.bin FM1_BENCH_KEYS="$K" FM1_BENCH_WAV=bench.raw "../../$EMU" --fwsc bench.fwsc --flash-chip uc25hq80 --mhz "${1:-240}" --bench 9000 >bench.log 2>&1 || { tail -5 bench.log; exit 1; }
+# then the Bell Tower (the church bells: four partials each, long): HOME to the Sleigh, five turns, in, every key, ringing
+K="$K,6000:HOME,6100:HOME^,6400:e0:+1,6600:e0:+1,6800:e0:+1,7000:e0:+1,7200:e0:+1,7500:PLAY,7600:PLAY^"
+t=8000; for n in F3 G3 A3 B3 C4 D4 E4 F4 G4 A4 B4 C5 D5 E5 F5 G5; do K="$K,$t:$n@100,$((t + 60)):$n^"; t=$((t + 70)); done
+K="$K,9400:PLAY,9500:PLAY^"
+cd build/emu && echo "$K" > bench-keys.txt
+FM1_DUMPRAM=bench-ram.bin FM1_BENCH_KEYS="$K" FM1_BENCH_WAV=bench.raw "../../$EMU" --fwsc bench.fwsc --flash-chip uc25hq80 --mhz "${1:-240}" --bench 13000 >bench.log 2>&1 || { tail -5 bench.log; exit 1; }
 "$PY" - "${1:-240}" <<'PYEOF'
 import struct, sys
 d = open('bench-ram.bin', 'rb').read()

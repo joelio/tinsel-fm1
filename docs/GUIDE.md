@@ -1,8 +1,7 @@
 # Tinsel: the grown-ups' guide
 
 Tinsel is made so that a small child can switch it on and play without help, and so that nothing they do can lose
-anything. This page is for the grown-up who sets it up. It describes Tinsel as it is now (v0.1); later releases add
-more toys and games through December.
+anything. This page is for the grown-up who sets it up, and describes every toy and game as they are now.
 
 ## The rules everywhere
 
@@ -12,7 +11,8 @@ more toys and games through December.
 | **A brightly lit key** | Press me |
 | **A glowing key** | Next, or "this does something" |
 | **MASTER** | The volume, under the ceiling set in the panel |
-| **EDIT and SAVE, held together for 2 seconds** | The grown-up panel. Nothing else changes a setting or deletes anything |
+| **EDIT, held** | A help card: what this screen's controls do, to read out |
+| **EDIT and SAVE, held together for 2 seconds** | The grown-up panel (a bar shows it coming). Nothing else changes a setting or deletes anything |
 
 ## The Grotto (where it starts)
 
@@ -64,6 +64,76 @@ light up: there are seven groups of keys, one under each chimney. Each catch pla
 
 The score shows as stars (one a catch, up to ten), with the number in the corner. The best score is kept.
 
+## The Music Box
+
+A box with a cylinder of pins and a comb (its teeth are the 27 keys, low at the bottom).
+
+| | |
+| --- | --- |
+| Any knob | Turns the crank: faster turning plays faster, backwards plays backwards |
+| PLAY | Winds it up: it plays by itself and runs down slowly, like clockwork. PLAY again stops it |
+| OCT- / OCT+ | Another box: Jingle Bells, We Wish You, Silent Night, Deck the Halls, *your tune*, then any kept tunes |
+| Keys | Their notes. On *your tune* (the wand picture), a pin too, at the comb: crank or wind it and it plays back |
+| REC | Empties *your tune* (only that one) |
+
+The carol boxes and kept tunes are play-only. *Your tune* lasts until Tinsel is switched off; to keep it, use
+**Music box: keep tune** in the panel (four can be kept; **clear kept** empties them).
+
+## The Bell Tower
+
+Six church bells, with their ropes, and the rows they ring going by underneath (the newest at the bottom).
+
+| | |
+| --- | --- |
+| Keys, while the bells are still | Ring the bells: the keyboard is in six groups, the treble on the left |
+| Any knob, while still | The method: Rounds, Plain Hunt on 5 and on 6, Plain Bob Doubles and Minor, Grandsire Doubles |
+| PLAY | Start ringing; again to stand them (stop). A method stops by itself when it comes round |
+| Keys, ringing rounds | Call changes: a key swaps the bells in its place and the next, at the next row. Queens, Kings, Tittums and back rounds get a cheer |
+| OCT- / OCT+ | Your bell (blue): its keys light when its turn comes; press one. At Little Elf the tower waits for you; at Elf and Santa it keeps time, and rings your bell softly if you miss |
+| ARP / SEQ | Call a bob / a single at the next lead end (Plain Bob and Grandsire) |
+
+## The Snow Globe
+
+Turn any knob to shake it: the snow swirls with the turning, and tiny bells follow it. Stop, and it settles into a
+chord. Keys choose what is inside (in six groups: a church, a tree, a snowman, a sleigh, a house, a reindeer). Any
+button is a big shake.
+
+## Jingle It!
+
+Tinsel calls, you do it. Each call has its own picture and sound, so no reading is needed.
+
+| Call | Picture and sound | Do |
+| --- | --- | --- |
+| Ring it! | a bell; three rising bells | Press a lit key (Little Elf: any key; Elf: the lit group; Santa: the lit key) |
+| Twist it! | a spinning candy cane; a run of chimes | Turn any knob |
+| Jingle it! | sleigh bells; a shake | Press PLAY (or any button) |
+| Shh! (Elf and Santa) | a sleeping reindeer; two soft notes | Do nothing until the next call |
+
+Little Elf has no time limit and nothing is ever wrong. At Elf and Santa a bar shows the time left, and three misses
+end the round (at Santa, a wrong answer is a miss too).
+
+## Cracker Pull
+
+A cracker across the screen. Low keys pull the left end, high keys the right; press keys to pull. With one player
+an elf pulls the other end; when someone presses a high key, it becomes two players (OCT- or OCT+ on the start page
+chooses too). At Elf and Santa a light flashes on the beat: a pull on the beat is four times as strong. It always
+ends in a BANG: a paper hat for the winner (two for a draw), then a joke.
+
+## Snowball Rally
+
+A rooftop rally. The left mitten moves with KNOB1, KNOB2 or SELECT; the right with KNOB3, KNOB4, ALGORITHM or
+PRESETS (clockwise is up). An end nobody has touched for four seconds is played by an elf. Every return plays the
+next note of Jingle Bells; a miss makes a little snowman on that side. Nobody loses; the number at the top is the
+rally, and the longest is kept. Little Elf has big mittens and a slow snowball; Santa speeds up with every hit.
+PLAY stops.
+
+## Sleigh Ride
+
+The sleigh flies along a snowy track at night. Bell posts come towards you; the keys of the nearest one light. Ring
+it (press a lit key) as you pass: each one plays the next note of Jingle Bells. Any knob steers. At Little Elf any
+key rings any post, and nothing is missed. At Elf you must be steering near the post, and three missed posts end
+the ride; at Santa nearer still, and faster and faster.
+
 ## The Advent calendar
 
 A house with 24 windows. **The first 24 keys are the doors**: key 1 is door 1, and so on. Today's door wobbles and
@@ -92,8 +162,10 @@ blinks) to confirm.
 | | |
 | --- | --- |
 | Volume | The ceiling: Gentle (the default, half of full), Medium, Full. MASTER still turns it down from there |
-| Present Catch | Its level |
+| Present Catch, Jingle It!, Cracker Pull, Snowball Rally, Sleigh Ride, Bell Tower | Each game's level |
 | All games | Every game's level at once |
+| Music box: keep tune | Keeps *your tune* (four can be kept) |
+| Music box: clear kept | Empties the kept tunes |
 | Advent: open all | The whole calendar, now |
 | Advent: close all | Every door shut again, and the day count reset |
 | Date | Today's date by hand, a day at a time |

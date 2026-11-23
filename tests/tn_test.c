@@ -16,6 +16,8 @@
 #include "../firmware/src/tn_catch.h"
 #include "../firmware/src/tn_set.h"
 #include "../firmware/src/tn_advent.h"
+#include "../firmware/src/tn_ring.h"
+#include "../firmware/src/tn_games.h"
 
 static int bad, total;
 static void check(const char *what, int ok)
@@ -315,6 +317,148 @@ static void test_advent(void)
     check("settings: rubbish (another firmware's, a broken save) is refused", !tn_set_valid(&s));
 }
 
+/* ---- change ringing ---- */
+static uint32_t ring_code(const ring_t *r) { uint32_t i, c = 0; for (i = 0; i < r->bells; i++) c = c * 10u + r->row[i]; return c; }
+static uint32_t ring_course(uint32_t m, uint32_t *lead_head)   /* rows of the plain course; the first lead head */
+{
+    ring_t r;
+    uint32_t n = 0;
+    ring_start(&r, m);
+    *lead_head = 0;
+    do {
+        ring_next(&r);
+        n++;
+        if (r.pos == 0u && !*lead_head) *lead_head = ring_code(&r);
+    } while (!r.rounds_again && n < 10000u);
+    return n;
+}
+static uint32_t ring_extent(uint32_t m, const uint8_t *calls, uint32_t ncalls, uint32_t reps)   /* distinct rows of a touch */
+{
+    static uint8_t seen[100000];
+    ring_t r;
+    uint32_t leads = 0, rows = 0, distinct = 0;
+    memset(seen, 0, sizeof seen);
+    ring_start(&r, m);
+    while (leads < ncalls * reps && rows < 20000u) {
+        if (r.pos == 0u) ring_call(&r, calls[leads % ncalls]);
+        ring_next(&r);
+        rows++;
+        if (!seen[ring_code(&r) % 100000u]) { seen[ring_code(&r) % 100000u] = 1; distinct++; }
+        if (r.pos == 0u) leads++;
+    }
+    return distinct + (ring_is_rounds(&r) ? 0u : 1000u);   /* (it must come round) */
+}
+static void test_ring(void)
+{
+    uint32_t lh, n;
+    char what[100];
+    static const uint8_t PB[4] = {CALL_NONE, CALL_NONE, CALL_NONE, CALL_BOB};
+    static const uint8_t GR[6] = {CALL_NONE, CALL_BOB, CALL_NONE, CALL_BOB, CALL_NONE, CALL_SINGLE};
+    ring_t r;
+    n = ring_course(RM_HUNT5, &lh);
+    snprintf(what, sizeof what, "ring: plain hunt on 5 comes round in 10 rows (%u)", n); check(what, n == 10u);
+    n = ring_course(RM_HUNT6, &lh);
+    snprintf(what, sizeof what, "ring: plain hunt on 6 comes round in 12 rows (%u)", n); check(what, n == 12u);
+    n = ring_course(RM_BOB_DOUBLES, &lh);
+    snprintf(what, sizeof what, "ring: plain bob doubles: lead head 13524, 40 rows (%u, %u)", lh, n); check(what, lh == 13524u && n == 40u);
+    n = ring_course(RM_BOB_MINOR, &lh);
+    snprintf(what, sizeof what, "ring: plain bob minor: lead head 135264, 60 rows (%u, %u)", lh, n); check(what, lh == 135264u && n == 60u);
+    n = ring_course(RM_GRANDSIRE, &lh);
+    snprintf(what, sizeof what, "ring: grandsire doubles: lead head 12534, 30 rows (%u, %u)", lh, n); check(what, lh == 12534u && n == 30u);
+    n = ring_extent(RM_BOB_DOUBLES, PB, 4, 3);
+    snprintf(what, sizeof what, "ring: plain bob doubles, P P P B three times: the 120-row extent (%u)", n); check(what, n == 120u);
+    n = ring_extent(RM_GRANDSIRE, GR, 6, 2);
+    snprintf(what, sizeof what, "ring: grandsire doubles, P B P B P S twice: all 120 rows (%u)", n); check(what, n == 120u);
+    ring_start(&r, RM_ROUNDS);
+    check("ring: rounds on six is rounds", ring_named(&r) == 1u);
+    ring_swap(&r, 1); ring_swap(&r, 3); ring_swap(&r, 2);   /* 123456 -> 132456 -> 132546 -> 135246 */
+    check("ring: three call changes make Queens", ring_named(&r) == 2u);
+    check("ring: no swap past the tenor", !ring_swap(&r, 5));
+}
+
+/* ---- the other games ---- */
+static void test_games(void)
+{
+    jingle_t j;
+    cracker_t c;
+    rally_t r;
+    ride_t d;
+    uint32_t t, e, good = 0, over = 0, ok;
+    /* Jingle It! */
+    jingle_start(&j, LV_LITTLE, 5, 0);
+    for (t = 0, ok = 1; t < 300000u; t += 10u) {
+        e = jingle_tick(&j, t);
+        ok &= e != JE_MISS && e != JE_OVER && j.call != JC_SHH;
+        if (j.active && t - j.t_call > 30000u) { jingle_act(&j, JA_KEY, 3, t); jingle_act(&j, JA_TWIST, 0, t); jingle_act(&j, JA_BUTTON, 0, t); }
+    }
+    check("jingle: Little Elf never misses, never ends, never asks for SHH", ok && !j.done);
+    jingle_start(&j, LV_LITTLE, 5, 0);
+    for (t = 0; t < 2000u; t += 10u) jingle_tick(&j, t);
+    check("jingle: Little Elf: a wrong thing is just wrong, the right one is good",
+          j.active && (j.call == JC_RING ? jingle_act(&j, JA_TWIST, 0, t) == JE_WRONG && jingle_act(&j, JA_KEY, 26, t) == JE_GOOD
+                                         : jingle_act(&j, JA_KEY, 4, t) == JE_WRONG && jingle_act(&j, j.call == JC_TWIST ? JA_TWIST : JA_BUTTON, 0, t) == JE_GOOD));
+    jingle_start(&j, LV_ELF, 9, 0);
+    for (t = 0; t < 120000u && !j.done; t += 10u) if (jingle_tick(&j, t) == JE_OVER) over++;
+    check("jingle: Elf left alone loses three lives (SHH calls are passed by waiting)", j.done && over == 1u && j.lives == 0u);
+    jingle_start(&j, LV_SANTA, 3, 0);
+    for (t = 0; t < 120000u && !j.done; t += 10u) {
+        jingle_tick(&j, t);
+        if (j.active && t - j.t_call == 300u) {
+            if (j.call == JC_RING) e = jingle_act(&j, JA_KEY, j.key, t);
+            else if (j.call == JC_TWIST) e = jingle_act(&j, JA_TWIST, 0, t);
+            else if (j.call == JC_JINGLE) e = jingle_act(&j, JA_BUTTON, 0, t);
+            else e = JE_NONE;
+            if (e == JE_GOOD) good++;
+        }
+    }
+    check("jingle: Santa played right keeps going, and gets quicker", !j.done && good > 30u && j.window < 2500u);
+    /* Cracker Pull */
+    cracker_start(&c, LV_LITTLE, 0, 0);
+    for (t = 0; t < 60000u && !c.done; t += 10u) cracker_tick(&c, t);
+    check("cracker: Little Elf goes bang even if nobody pulls", c.done && t < 20000u);
+    cracker_start(&c, LV_ELF, 1, 0);
+    check("cracker: on the beat pulls harder than off it", cracker_tap(&c, 0, 600) == 4u && cracker_tap(&c, 0, 300) == 1u);
+    cracker_start(&c, LV_ELF, 1, 0);
+    for (t = 0; !c.done && t < 100000u; t += 600u) { cracker_tap(&c, 0, t); if (t % 1200u == 0u) cracker_tap(&c, 1, t + 300u); }
+    check("cracker: two players: the one pulling on the beat wins", c.done && c.winner == 0u);
+    /* Snowball Rally */
+    rally_start(&r, LV_ELF, 4);
+    for (t = 0, ok = 1; t < 60000u; t += 10u) {
+        int32_t y = r.by >> 8;
+        rally_move(&r, 0, (y - r.py[0]) / 8); rally_move(&r, 1, (y - r.py[1]) / 8);   /* (perfect players) */
+        e = rally_step(&r, 10);
+        ok &= e != RE_MISS_L && e != RE_MISS_R;
+        ok &= (r.by >> 8) >= RL_TOP && (r.by >> 8) <= RL_BOT;
+    }
+    check("rally: perfect players never miss, and the ball stays on the roof", ok && r.hits > 20u);
+    rally_start(&r, LV_LITTLE, 4);
+    for (t = 0; t < 60000u; t += 10u) rally_step(&r, 10);
+    check("rally: nobody playing: the ball keeps going (hits, or snowmen), nothing ends", r.snowmen[0] + r.snowmen[1] + r.hits > 10u);
+    rally_start(&r, LV_SANTA, 7);
+    for (t = 0; t < 30000u; t += 10u) { int32_t y = r.by >> 8; rally_move(&r, 0, (y - r.py[0]) / 8); rally_move(&r, 1, (y - r.py[1]) / 8); rally_step(&r, 10); }
+    check("rally: Santa speeds up with every hit", r.speed > (140 << 8));
+    rally_start(&r, LV_ELF, 1);
+    for (t = 0; t < 30000u; t += 10u) { rally_elf(&r, 0, 10); rally_elf(&r, 1, 10); rally_step(&r, 10); }
+    check("rally: two elves keep a rally going", r.hits > 10u);
+    /* Sleigh Ride */
+    ride_start(&d, LV_LITTLE, 2);
+    for (t = 0, ok = 1; t < 120000u; t += 20u) { ok &= ride_step(&d, 20) == RD_NONE; }
+    check("ride: Little Elf left alone never ends", ok && !d.done);
+    ride_start(&d, LV_LITTLE, 2);
+    for (t = 0; t < 60000u; t += 20u) { ride_step(&d, 20); ride_key(&d, 13); }
+    check("ride: Little Elf: any key rings the posts as they pass", d.score > 20u);
+    ride_start(&d, LV_ELF, 2);
+    for (t = 0; t < 600000u && !d.done; t += 20u) ride_step(&d, 20);
+    check("ride: Elf left alone ends after three posts are missed", d.done && d.lives == 0u);
+    ride_start(&d, LV_ELF, 3);
+    for (t = 0, ok = 0; t < 60000u && !d.done; t += 20u) {
+        int lane = ride_lit_lane(&d);
+        ride_step(&d, 20);
+        if (lane >= 0) { ride_steer(&d, (ride_post_x((uint32_t)lane) - d.x) / 12); if (ride_key(&d, CATCH_LANE_FIRST[lane])) ok++; }
+    }
+    check("ride: Elf steered to each post and rung with its keys keeps going", !d.done && ok > 20u);
+}
+
 static void write_wav(const char *name)
 {
     FILE *f = fopen(name, "wb");
@@ -351,6 +495,8 @@ int main(int argc, char **argv)
     test_carols();
     test_catch();
     test_advent();
+    test_ring();
+    test_games();
     printf("tinsel: %d checks, %d failed\n", total, bad);
     return bad != 0;
 }

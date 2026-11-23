@@ -17,9 +17,16 @@ Sleigh**, a menu of big pictures: turn any knob to choose, then PLAY (or any key
 | **The Carol Book** | Eight carols, three ways. *Magic*: any key plays the next note, so a toddler bashing the keys plays Jingle Bells. *Follow*: the next key lights up and the band waits for you. *Listen*: it plays itself. |
 | **Present Catch** | Presents fall towards seven chimneys; the keys under the lowest one light up. Every catch plays the next note of Jingle Bells. At *Little Elf* (the default) nothing is ever missed. |
 | **The Advent calendar** | A house with 24 windows; the first 24 keys are the doors. Each door holds a carol, a joke, a sound or a new decoration for the Grotto. It learns the date from [web/advent.html](web/advent.html) (Chrome or Edge, over USB), or counts the days it is switched on. |
-| *More presents* | Wrapped, for later in December: the Music Box, the Bell Tower, Jingle It!, the Snow Globe, Snowball Rally, Cracker Pull, Sleigh Ride. |
+| **The Music Box** | Crank it with any knob, or wind it up with PLAY. Four carol boxes, and one of your own: press keys to put pins in. |
+| **The Bell Tower** | Six church bells. Ring them on the keys; ring rounds and make call changes; or ring Plain Bob and Grandsire, taking one bell yourself. |
+| **The Snow Globe** | Turn the knobs to shake it; the snow swirls, tiny bells follow it, and it settles into a chord. |
+| **Jingle It!** | "Ring it! Twist it! Jingle it!": a call, a picture and a sound, and you do it. |
+| **Cracker Pull** | Two players, low keys against high keys (or you against an elf), pulling on the beat until it goes BANG. A hat, and a joke. |
+| **Snowball Rally** | A rooftop rally for two, a knob each; an elf takes an empty end. Every return plays the next note of a carol. |
+| **Sleigh Ride** | Steer the sleigh and ring the bell posts as they pass. |
 
-A brightly lit key means *press me*; a glowing one means *next*. Holding **EDIT and SAVE together for two seconds**
+A brightly lit key means *press me*; a glowing one means *next*. Holding **EDIT** shows what this screen's controls
+do. Holding **EDIT and SAVE together for two seconds**
 opens the grown-up panel: the volume ceiling (gentle by default, for small ears), the games' levels (Little Elf, Elf,
 Santa), the calendar, the date, the high scores. Nothing a small hand does outside the panel deletes anything.
 
@@ -50,13 +57,15 @@ tests/run_host.sh tests/scripts/tinsel.txt   # the screens as PNG and the sound 
 ./build.sh --release 0.1  # build/tinsel-0.1.fwsc
 ```
 
-- `firmware/src/tinsel.c` is the app: the screens, the loop, what is kept. Each screen is a header
-  (`tn_grotto.h`, `tn_sleigh.h`, `tn_carolbook.h`, `tn_catchgame.h`, `tn_adventscr.h`, `tn_panel.h`).
+- `firmware/src/tinsel.c` is the app: the screens, the loop, what is kept, the help cards. Each screen is a header
+  (`tn_grotto.h`, `tn_sleigh.h`, `tn_carolbook.h`, `tn_catchgame.h`, `tn_adventscr.h`, `tn_musicbox.h`,
+  `tn_bells.h`, `tn_globe.h`, `tn_play.h` for Jingle It!, Cracker Pull, Snowball Rally and Sleigh Ride, `tn_panel.h`).
 - `tn_snd.h` is the sound: bells, celesta, music box, glockenspiel, sleigh bells, a cathedral reverb, and a
   ceiling the sound never passes.
 - `tn_gfx.h` draws a byte a pixel and sends the panel only what changed.
-- The rules of the carol player, the game and the calendar are pure (`tn_carol.h`, `tn_catch.h`, `tn_advent.h`),
-  and `tests/tn_test.c` checks them.
+- The rules are pure and tested by `tests/tn_test.c`: the carol player (`tn_carol.h`), the games (`tn_catch.h`,
+  `tn_games.h`), the calendar (`tn_advent.h`), change ringing (`tn_ring.h`: Plain Bob and Grandsire checked against
+  their lead heads and extents), the music box's cylinder (`tn_box.h`).
 - The carols are our own transcriptions, one text file each in [music/](music/). `tools/gen_music.py` checks
   every bar and makes `firmware/gen/tn_music.h`. Only public-domain melodies are used; see
   [music/README.md](music/README.md).

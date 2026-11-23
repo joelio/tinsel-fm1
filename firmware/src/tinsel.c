@@ -42,6 +42,9 @@ static void fm1_led_level(uint32_t id, uint32_t lvl)   /* (the safe build: two l
 #include "tn_carol.h"
 #include "tn_catch.h"
 #include "tn_advent.h"
+#include "tn_ring.h"
+#include "tn_box.h"
+#include "tn_games.h"
 
 /* ---- what is kept (tn_set.h) ----------------------------------------------------------------------------- */
 static tn_settings_t set;
@@ -49,7 +52,8 @@ static uint32_t set_dirty, set_changed_at;
 static void set_touch(void) { set_dirty = 1; set_changed_at = fm1_ms; }
 
 /* ---- the screens ----------------------------------------------------------------------------------------- */
-enum { SC_BOOT, SC_GROTTO, SC_SLEIGH, SC_CAROL, SC_CATCH, SC_ADVENT, SC_PANEL, SC_COUNT };
+enum { SC_BOOT, SC_GROTTO, SC_SLEIGH, SC_CAROL, SC_CATCH, SC_ADVENT, SC_PANEL, SC_MUSICBOX, SC_BELLS, SC_JINGLE, SC_GLOBE,
+       SC_CRACKER, SC_RALLY, SC_RIDE, SC_COUNT };
 static uint32_t scene = SC_BOOT, scene_t0;
 static uint8_t led_lv[TN_NLED], led_shown[TN_NLED];
 static gesture_t gesture;
@@ -60,6 +64,10 @@ static void scene_go(uint32_t s);
 #include "tn_carolbook.h"
 #include "tn_catchgame.h"
 #include "tn_adventscr.h"
+#include "tn_musicbox.h"
+#include "tn_bells.h"
+#include "tn_globe.h"
+#include "tn_play.h"
 #include "tn_panel.h"
 
 /* the boot plate: TINSEL in gold on a red ribbon, snow, a sleigh-bell flourish (any key skips) */
@@ -102,8 +110,52 @@ static void scene_go(uint32_t s)
     case SC_CATCH: cg_enter(); break;
     case SC_ADVENT: av_enter(); break;
     case SC_PANEL: pn_enter(); break;
+    case SC_MUSICBOX: mb_enter(); break;
+    case SC_BELLS: bt_enter(); break;
+    case SC_JINGLE: ji_enter(); break;
+    case SC_GLOBE: gb_enter(); break;
+    case SC_CRACKER: ck_enter(); break;
+    case SC_RALLY: rl_enter(); break;
+    case SC_RIDE: rd_enter(); break;
     default: break;
     }
+}
+
+/* the help card: EDIT held alone for a moment shows what this screen's controls do (for grown-ups to read out) */
+static const char *const HELP[SC_COUNT][7] = {
+    [SC_GROTTO] = {"KEYS: BELLS AND BAUBLES", "KNOBS: FLY THE ROBIN", "PLAY: A SNOWSTORM", "OCT: BELLS UP AND DOWN", "OTHER BUTTONS: SURPRISES", "HOME: THE SLEIGH (MENU)", 0},
+    [SC_SLEIGH] = {"KNOBS: CHOOSE", "PLAY OR ANY KEY: GO IN", "HOME: THE GROTTO", 0},
+    [SC_CAROL] = {"KNOBS: CHOOSE A CAROL", "OCT: MAGIC FOLLOW LISTEN", "PLAY OR A KEY: START", "MAGIC: ANY KEY PLAYS ON", "FOLLOW: PRESS THE LIT KEY", "KNOB WHILE PLAYING: SOUND", 0},
+    [SC_CATCH] = {"PRESENTS FALL TO CHIMNEYS", "PRESS THE LIT KEYS", "TO CATCH THEM", "LEVEL: IN THE PANEL", 0},
+    [SC_ADVENT] = {"A KEY A DOOR: 1 TO 24", "KNOBS + PLAY: THE SAME", "THE DATE: WEB/ADVENT.HTML", 0},
+    [SC_MUSICBOX] = {"KNOBS: TURN THE CRANK", "PLAY: WIND IT UP", "OCT: ANOTHER BOX", "KEYS: NOTES (YOUR TUNE:", "  ALSO PINS)", "REC: EMPTY YOUR TUNE", "PANEL: KEEP YOUR TUNE"},
+    [SC_BELLS] = {"KEYS: RING THE BELLS", "KNOBS: CHOOSE A METHOD", "PLAY: RING / STAND", "ROUNDS: KEYS SWAP BELLS", "OCT: YOUR BELL (BLUE)", "ARP: BOB   SEQ: SINGLE", 0},
+    [SC_JINGLE] = {"RING IT: PRESS A LIT KEY", "TWIST IT: TURN A KNOB", "JINGLE IT: PRESS PLAY", "SHH: DO NOTHING", 0},
+    [SC_GLOBE] = {"KNOBS: SHAKE IT", "KEYS: WHAT IS INSIDE", "BUTTONS: A BIG SHAKE", 0},
+    [SC_CRACKER] = {"LOW KEYS PULL LEFT", "HIGH KEYS PULL RIGHT", "ON THE BEAT PULLS HARDER", "OCT ON THE PAGE: PLAYERS", 0},
+    [SC_RALLY] = {"LEFT: KNOB1 KNOB2 SELECT", "RIGHT: KNOB3 KNOB4 PRESETS", "NOBODY AT AN END: AN ELF", "PLAY: STOP", 0},
+    [SC_RIDE] = {"KNOBS: STEER", "PRESS THE LIT KEYS", "AS THE BELLS PASS", "PLAY: STOP", 0},
+};
+static uint32_t help_since, help_on;
+static void help_draw(uint32_t now)
+{
+    uint32_t i, n = 0;
+    int32_t y;
+    if (fm1_in.buttons >> TB_SAVE & 1u) {        /* the gesture on its way: say so */
+        uint32_t t = gesture.held ? now - gesture.since : 0u, w = t > TN_GESTURE_MS ? 200u : t * 200u / TN_GESTURE_MS;
+        g_rect(10, 90, 220, 60, P_NIGHT);
+        g_rect(10, 90, 220, 2, P_GOLD);
+        g_text_c(120, 98, &FONT_S, "KEEP HOLDING: GROWN-UPS", P_GOLD, P_GOLD_AA);
+        g_rect(20, 126, 200, 8, P_NIGHT3);
+        g_rect(20, 126, (int32_t)w, 8, P_GOLD);
+        return;
+    }
+    while (n < 7u && HELP[scene][n]) n++;
+    if (!n) return;
+    y = 120 - (int32_t)n * 10 - 10;
+    g_rect(6, y - 6, 228, (int32_t)n * 20 + 16, P_NIGHT);
+    g_rect(6, y - 6, 228, 2, P_GOLD);
+    for (i = 0; i < n; i++) g_text(14, y + 2 + (int32_t)i * 20, &FONT_S, HELP[scene][i], P_SNOW, P_TEXT_AA);
 }
 
 /* ---- the panel, read once a pass ------------------------------------------------------------------------- */
@@ -129,6 +181,8 @@ static void ui_pass(void)                       /* input: every pass of the main
 {
     tn_input_t in;
     read_panel(&in);
+    if (in.btn >> TB_EDIT & 1u) { if (!help_since) help_since = in.now | 1u; help_on = in.now - help_since > 700u && scene != SC_PANEL; }
+    else help_since = help_on = 0;
     if (gesture_step(&gesture, in.btn, in.now)) { if (scene != SC_PANEL) scene_go(SC_PANEL); return; }
     if (in.btn_down >> TB_HOME & 1u) {           /* HOME: back to the Grotto, from anywhere; in the Grotto, the Sleigh */
         if (scene == SC_PANEL) pn_leave();
@@ -145,6 +199,13 @@ static void ui_pass(void)                       /* input: every pass of the main
     case SC_CATCH: cg_input(&in); break;
     case SC_ADVENT: av_input(&in); break;
     case SC_PANEL: pn_input(&in); break;
+    case SC_MUSICBOX: mb_input(&in); break;
+    case SC_BELLS: bt_input(&in); break;
+    case SC_JINGLE: ji_input(&in); break;
+    case SC_GLOBE: gb_input(&in); break;
+    case SC_CRACKER: ck_input(&in); break;
+    case SC_RALLY: rl_input(&in); break;
+    case SC_RIDE: rd_input(&in); break;
     default: break;
     }
 }
@@ -160,8 +221,16 @@ static void draw_frame(uint32_t now, uint32_t dt)
     case SC_CATCH: cg_tick(now, dt); cg_draw(now); cg_leds(led_lv, now); break;
     case SC_ADVENT: av_draw(now); av_leds(led_lv, now); break;
     case SC_PANEL: pn_draw(now); pn_leds(led_lv, now); return;   /* (it flushes itself: the screen test times it) */
+    case SC_MUSICBOX: mb_tick(now, dt); mb_draw(now); mb_leds(led_lv, now); break;
+    case SC_BELLS: bt_tick(now); bt_draw(now); bt_leds(led_lv, now); break;
+    case SC_JINGLE: ji_tick(now); ji_draw(now); ji_leds(led_lv, now); break;
+    case SC_GLOBE: gb_tick(now, dt); gb_draw(now); gb_leds(led_lv, now); break;
+    case SC_CRACKER: ck_tick(now); ck_draw(now); ck_leds(led_lv, now); break;
+    case SC_RALLY: rl_tick(now, dt); rl_draw(now); rl_leds(led_lv, now); break;
+    case SC_RIDE: rd_tick(now, dt); rd_draw(now); rd_leds(led_lv, now); break;
     default: g_clear(P_NIGHT); break;
     }
+    if (help_on) help_draw(now);
     g_flush();
 }
 

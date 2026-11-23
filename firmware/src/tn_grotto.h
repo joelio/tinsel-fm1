@@ -20,34 +20,6 @@
 #define GR_NFLAKE 64u
 #define GR_NHOT 8u
 
-static const char *const ROBIN_ROWS[] = {
-    "....kkkk....",
-    "...kkkkkk...",
-    "..kkkkekkk..",
-    "..kkkkkkkkoo",
-    ".kkrrrrkkk..",
-    "kkrrrrrrkk..",
-    "kkrrrrrrkk..",
-    ".kkrrrrkk...",
-    "..kkkkkk....",
-    "...d..d.....",
-};
-static const uint8_t ROBIN_COLS[] = {P_BROWN, P_RED, P_BLACK, P_ORANGE, P_BROWN_D};
-static const g_sprite_t ROBIN = {ROBIN_ROWS, 12, 10, "krebd", ROBIN_COLS};
-static const char *const DEER_ROWS[] = {
-    "..a.a...........",
-    "...a............",
-    "..bbb...........",
-    ".bbnb...........",
-    "..bb............",
-    "...bbbbbbbbbb...",
-    "...bbbbbbbbbbb..",
-    "....bbbbbbbbb.t.",
-    "....b.b...b.b...",
-    "...b...b.b...b..",
-};
-static const uint8_t DEER_COLS[] = {P_BROWN_D, P_BROWN, P_RED, P_SNOW};
-static const g_sprite_t DEER = {DEER_ROWS, 16, 10, "abnt", DEER_COLS};
 
 static struct {
     int16_t bx[TN_NKEYS], by[TN_NKEYS];         /* each key's bauble */
