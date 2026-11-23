@@ -9,7 +9,8 @@ bell rings and its bauble lights; press them all and the sleigh bells go. Turn a
 and whatever it lands on does something (the presents pop, the snowman's hat hops, the star sparkles). PLAY is the
 big moment: a fanfare and a snowstorm. Nothing in the Grotto can go wrong, and nothing in it changes a setting.
 
-**HOME** goes back to the Grotto from anywhere. In the Grotto, HOME opens **the Sleigh**, a menu of big pictures:
+**HOME** goes back to the Grotto from anywhere. In the Grotto, HOME (the little sleigh in the corner) opens **the
+Sleigh**, a menu of big pictures: turn any knob to choose, then PLAY (or any key, or any button) to go in.
 
 | | |
 | --- | --- |

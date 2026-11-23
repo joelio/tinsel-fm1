@@ -295,6 +295,20 @@ static void test_advent(void)
     gesture_step(&g, 1u << TB_EDIT, 1500);       /* let go of SAVE, grab it again */
     gesture_step(&g, 1u << TB_EDIT | 1u << TB_SAVE, 1600);
     check("gesture: a break starts the 2 s again", !gesture_step(&g, 1u << TB_EDIT | 1u << TB_SAVE, 2100) && gesture_step(&g, 1u << TB_EDIT | 1u << TB_SAVE, 3600));
+    {                                            /* "go": a key or any button but HOME, EDIT, SAVE */
+        tn_input_t in;
+        uint32_t b, ok = 1;
+        memset(&in, 0, sizeof in);
+        for (b = 0; b < 14u; b++) {
+            in.btn_down = 1u << b;
+            ok &= tn_go(&in, 0) == !(b == TB_HOME || b == TB_EDIT || b == TB_SAVE);
+        }
+        in.btn_down = 1u << TB_OCT_UP;
+        ok &= !tn_go(&in, 1u << TB_OCT_UP);
+        in.btn_down = 0; in.key_down = 1u << 20;
+        ok &= tn_go(&in, 0);
+        check("go: any key or button opens, but HOME, EDIT and SAVE (and what the screen uses) never", ok);
+    }
     tn_set_defaults(&s);
     check("settings: the defaults are valid", tn_set_valid(&s));
     s.level[3] = 9;

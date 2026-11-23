@@ -35,6 +35,28 @@ static void pic_holly_leaf(int32_t cx, int32_t cy, int32_t s, int flip)
     for (i = 0; i < 3; i++) g_disc(cx + d * (s / 4 + i * s / 4), cy - i * s / 8, s / 7, P_GREEN);
 }
 
+/* "press PLAY": a pulsing gold button with a play arrow, and the word under it (every screen that waits to start) */
+static void ui_play_sign(int32_t cx, int32_t cy, uint32_t now, int word)
+{
+    int32_t r = 13 + (int32_t)(tn_pulse(now, 0, 4)), y;
+    g_disc(cx, cy, r + 2, P_GOLD_D);
+    g_disc(cx, cy, r, P_GOLD);
+    for (y = -7; y <= 7; y++) g_hline(cx - 4, cx - 4 + (7 - (y < 0 ? -y : y)) * 10 / 7, cy + y, P_RED_D);
+    if (word) g_text_c(cx, cy + r + 4, &FONT_S, "PLAY", P_GOLD, P_GOLD_AA);
+}
+
+/* "HOME for more": a little sleigh and the word, in a corner of the Grotto */
+static void ui_home_hint(int32_t x, int32_t y, uint32_t now)
+{
+    int32_t bob = (int32_t)((now / 400u) & 1u);
+    g_rect(x, y + 8 + bob, 22, 7, P_RED);
+    g_rect(x + 16, y + 2 + bob, 6, 8, P_RED);
+    g_rect(x - 2, y + 15 + bob, 28, 2, P_GOLD);
+    g_rect(x + 4, y + 3 + bob, 8, 5, P_GREEN);   /* presents in it */
+    g_rect(x + 7, y + 1 + bob, 2, 7, P_GOLD);
+    g_text(x - 4, y + 19, &FONT_S, "HOME", P_GOLD, P_GOLD_AA);
+}
+
 static void pic_draw(uint32_t which, int32_t cx, int32_t cy, int32_t s, uint32_t now)
 {
     int32_t wob = (int32_t)((now / 120u) % 4u) - 1;

@@ -48,6 +48,16 @@ static int gesture_step(gesture_t *g, uint32_t btn, uint32_t now)
 /* deterministic little random numbers (xorshift32), seeded where they are used */
 static uint32_t tn_rand(uint32_t *s) { uint32_t x = *s ? *s : 0x9E3779B9u; x ^= x << 13; x ^= x >> 17; x ^= x << 5; return *s = x; }
 
+/* "go": what starts or opens the thing on screen. Any key, or any button but HOME (home), EDIT and SAVE (the
+ * grown-up gesture) and whatever the screen itself uses (except): a small hand mashing buttons gets in. */
+#define TN_GO_BUTTONS (0x3FFFu & ~(1u << TB_HOME | 1u << TB_EDIT | 1u << TB_SAVE))
+static int tn_go(const tn_input_t *in, uint32_t except) { return in->key_down || (in->btn_down & TN_GO_BUTTONS & ~except); }
+static uint32_t tn_pulse(uint32_t now, uint32_t lo, uint32_t hi)   /* an LED level breathing between lo and hi, ~1 s */
+{
+    uint32_t t = now % 1000u, span = hi - lo;
+    return lo + (t < 500u ? t : 1000u - t) * span / 500u;
+}
+
 /* the pictures (drawn in tn_pics.h) */
 enum {
     PIC_BELLS, PIC_PUDDING, PIC_HOLLY, PIC_STAR, PIC_CROWN, PIC_ANGEL, PIC_CANDLE, PIC_BELL,   /* the carols' (CP_...) */

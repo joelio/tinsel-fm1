@@ -56,7 +56,7 @@ static void cg_input(const tn_input_t *in)
 {
     uint32_t now = in->now, k;
     if (!cg.playing) {
-        if (in->key_down || (in->btn_down >> TB_PLAY & 1u)) cg_begin(now);
+        if (tn_go(in, 0)) cg_begin(now);
         return;
     }
     if (cg.over) {
@@ -153,7 +153,8 @@ static void cg_draw(uint32_t now)
             if (cg.g.score > cg.best_before) g_text_c(120, 92, &FONT_S, "BEST EVER!", P_YELLOW, 0xFFu);
         }
     } else {                                     /* the start: a present, the level's stars */
-        pic_draw(PIC_PRESENT, 120, 110, 36, now);
+        pic_draw(PIC_PRESENT, 110, 110, 36, now);
+        ui_play_sign(200, 104, now, 1);
         for (i = 0; i <= cg.level; i++) pic_star(120 - (int32_t)cg.level * 14 + (int32_t)i * 28, 158, 10, P_GOLD);
         if (set.best[0]) {
             char b[24];
@@ -169,6 +170,6 @@ static void cg_leds(uint8_t *lv, uint32_t now)
     uint32_t k;
     int lit = cg.playing && !cg.over ? catch_lit_lane(&cg.g) : -1;
     for (k = 0; k < TN_NKEYS; k++) lv[TN_KEY_LED(k)] = lit >= 0 && catch_lane_of(k) == (uint32_t)lit ? 64u : 2u;
-    if (!cg.playing) { lv[TB_PLAY] = (uint8_t)(16u + now / 30u % 32u); for (k = 0; k < TN_NKEYS; k++) lv[TN_KEY_LED(k)] = (now / 150u + k) % 7u == 0u ? 32u : 3u; }
+    if (!cg.playing) { lv[TB_PLAY] = (uint8_t)tn_pulse(now, 12, 64); for (k = 0; k < TN_NKEYS; k++) lv[TN_KEY_LED(k)] = (now / 150u + k) % 7u == 0u ? 32u : 3u; }
 }
 #endif

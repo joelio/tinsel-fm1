@@ -135,6 +135,6 @@ static void av_leds(uint8_t *lv, uint32_t now)
     if (av.showing) return;
     for (d = 1; d <= ADV_DOORS; d++)
         lv[TN_KEY_LED(d - 1u)] = (int)d == today ? (uint8_t)(16u + (now / 20u) % 48u) : advent_is_open(&set, d) ? 6u : 0u;
-    lv[TB_PLAY] = 16;
+    lv[TB_PLAY] = (uint8_t)tn_pulse(now, 8, 40);
 }
 #endif

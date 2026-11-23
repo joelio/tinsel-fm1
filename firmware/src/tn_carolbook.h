@@ -50,7 +50,7 @@ static void cb_input(const tn_input_t *in)
         }
         if (in->btn_down >> TB_OCT_UP & 1u) { cb.mode = (uint8_t)((cb.mode + 1u) % CM_COUNT); snd_ping(TI_GLOCK, 79u + cb.mode * 4u, 80, 0); }
         if (in->btn_down >> TB_OCT_DOWN & 1u) { cb.mode = (uint8_t)((cb.mode + CM_COUNT - 1u) % CM_COUNT); snd_ping(TI_GLOCK, 79u + cb.mode * 4u, 80, 0); }
-        if (in->key_down || (in->btn_down >> TB_PLAY & 1u)) {
+        if (tn_go(in, 1u << TB_OCT_UP | 1u << TB_OCT_DOWN)) {   /* (OCT- OCT+ choose the way) */
             carol_start(&cb.p, cb.page, cb.mode, now);
             cb.playing = 1;
             cb.ended = 0;
@@ -127,6 +127,7 @@ static void cb_draw(uint32_t now)
             if (sel) g_disc(x, 24, 20, P_NIGHT3);
             pic_draw(m == CM_MAGIC ? PIC_WAND : m == CM_FOLLOW ? PIC_FOLLOW : PIC_EAR, x, 24, sel ? 15 : 9, now);
         }
+        ui_play_sign(208, 100, now, 1);
         cb_draw_keys(204, now);
         return;
     }
@@ -158,7 +159,7 @@ static void cb_leds(uint8_t *lv, uint32_t now)
     uint32_t k;
     if (!cb.playing) {
         for (k = 0; k < TN_NKEYS; k++) lv[TN_KEY_LED(k)] = 3;
-        lv[TB_PLAY] = (uint8_t)(16u + now / 30u % 32u);
+        lv[TB_PLAY] = (uint8_t)tn_pulse(now, 12, 64);
         lv[TB_OCT_DOWN] = lv[TB_OCT_UP] = 16;
         return;
     }

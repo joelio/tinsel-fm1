@@ -29,12 +29,15 @@ touch wakes it). Doors of the Advent calendar add things to the Grotto: a candy 
 
 ## The Sleigh (the menu)
 
-Turn any knob to slide through the pictures; each has its own little jingle. Press any key or PLAY to open one.
-A wrapped present is something still to come.
+In the Grotto, the little sleigh in the top corner says **HOME**, and the HOME button breathes: press it for the
+Sleigh. Turn any knob to slide through the pictures; each has its own little jingle. Then press **PLAY** (the gold
+▶ under the picture, and PLAY's light pulses), or any key, or any other button but HOME, EDIT and SAVE: mashing
+buttons gets in. A wrapped present is something still to come.
 
 ## The Carol Book
 
-Turn a knob to choose a carol (a picture each). OCT- and OCT+ choose the way to play it; any key or PLAY starts.
+Turn a knob to choose a carol (a picture each). OCT- and OCT+ choose the way to play it; PLAY (the gold ▶), any key
+or another button starts.
 
 | Way | Picture | What happens |
 | --- | --- | --- |
@@ -50,7 +53,7 @@ the World, God Rest Ye Merry Gentlemen, Shchedryk (Carol of the Bells).
 
 ## Present Catch
 
-Any key or PLAY starts. Presents fall from Santa's sleigh towards seven chimneys. The keys under the lowest present
+PLAY (the gold ▶), any key or any button starts. Presents fall from Santa's sleigh towards seven chimneys. The keys under the lowest present
 light up: there are seven groups of keys, one under each chimney. Each catch plays the next note of Jingle Bells.
 
 | Level (set in the panel) | |

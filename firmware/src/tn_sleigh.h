@@ -42,7 +42,7 @@ static void sl_input(const tn_input_t *in)
         snd_shake(40);
         sl_jingle(sl.at);
     }
-    if (in->key_down || (in->btn_down >> TB_PLAY & 1u)) {
+    if (tn_go(in, 0)) {                         /* any key, any button (but HOME, EDIT, SAVE): in */
         const sl_item_t *it = &SL_ITEMS[sl.at];
         if (it->scene == 255u) { sl.t_nope = in->now; snd_fx(SFX_BOING); }
         else scene_go(it->scene);
@@ -60,18 +60,23 @@ static void sl_draw(uint32_t now)
         int32_t cx = 120 + k * 92 + slide, s = k ? 22 : 50;
         int32_t wob = (!k && sl.t_nope && now - sl.t_nope < 500u) ? (int32_t)((now / 50u) % 5u) - 2 : 0;
         if (cx < -40 || cx > 280) continue;
-        if (!k) g_disc(cx, 110, 70, P_NIGHT2);
-        pic_draw(SL_ITEMS[i].pic, cx + wob, k ? 120 : 108, s, now);
+        if (!k) g_disc(cx, 104, 66, P_NIGHT2);
+        pic_draw(SL_ITEMS[i].pic, cx + wob, k ? 110 : 98, s, now);
     }
-    g_text_c(120, 204, &FONT_S, SL_ITEMS[sl.at].name, P_NIGHT, 0xFFu);
+    if (SL_ITEMS[sl.at].scene != 255u) ui_play_sign(120, 179, now, 0);   /* press PLAY (or anything) to go in */
+    g_text_c(120, 205, &FONT_S, SL_ITEMS[sl.at].name, P_NIGHT, 0xFFu);
     for (k = 0; k < (int32_t)SL_N; k++) g_disc(120 - (int32_t)SL_N * 5 + k * 10 + 5, 228, k == sl.at ? 3 : 2, k == sl.at ? P_RED : P_SNOW_SH);
 }
 
 static void sl_leds(uint8_t *lv, uint32_t now)
 {
     uint32_t k;
-    for (k = 0; k < TN_NKEYS; k++) lv[TN_KEY_LED(k)] = (uint8_t)((now / 120u + k) % 9u == 0u ? 24u : 3u);
-    lv[TB_PLAY] = (uint8_t)(16u + now / 30u % 32u);
-    lv[TB_HOME] = 16;
+    for (k = 0; k < TN_NKEYS; k++) {            /* the lights run in towards the middle: press anything */
+        uint32_t d = k < 13u ? 13u - k : k - 13u;
+        lv[TN_KEY_LED(k)] = (uint8_t)((d + now / 90u) % 7u == 0u ? 40u : 4u);
+    }
+    for (k = 0; k < 14u; k++) if (TN_GO_BUTTONS >> k & 1u) lv[k] = 6;
+    lv[TB_PLAY] = (uint8_t)tn_pulse(now, 12, 64);
+    lv[TB_HOME] = 6;
 }
 #endif

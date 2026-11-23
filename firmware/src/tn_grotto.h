@@ -333,6 +333,7 @@ static void gr_draw(uint32_t now)
         g_rect(148, 162, 14, 6, P_RED);
         g_rect(147, 148, 10, 4, P_SNOW);
     }
+    ui_home_hint(206, 4, now);                  /* HOME: the Sleigh, and everything else */
     g_sprite(&ROBIN, gr.rx, gr.ry, 2, gr.rflip);
 }
 
@@ -359,7 +360,7 @@ static void gr_leds(uint8_t *lv, uint32_t now)
         if (now - gr.last_input > 60000u && (now / 400u + k * 7u) % 9u == 0u) l = 16u;   /* idle twinkle */
         lv[TN_KEY_LED(k)] = (uint8_t)l;
     }
-    lv[TB_PLAY] = (uint8_t)(8u + (now / 40u % 50u < 25u ? now / 40u % 25u : 25u - now / 40u % 25u));   /* PLAY breathes */
-    lv[TB_HOME] = 4;
+    lv[TB_PLAY] = (uint8_t)tn_pulse(now + 500u, 6, 30);   /* PLAY breathes too, the other way */
+    lv[TB_HOME] = (uint8_t)tn_pulse(now, 6, 48);   /* HOME breathes: there is more */
 }
 #endif
