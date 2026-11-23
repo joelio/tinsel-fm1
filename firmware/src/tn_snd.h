@@ -44,6 +44,18 @@ static int32_t snd_sine(uint32_t ph)            /* a cycle over 2^32 -> -32767..
     return y > 32767 ? 32767 : y < -32767 ? -32767 : y;
 }
 
+/* the sine for the voices: a table of 2048 in RAM, filled from the parabola at the first note (-66 dB is plenty for
+ * bells, and a lookup is far cheaper than the polynomial in the inner loop) */
+static int16_t snd_sin_tab[2048];
+static uint8_t snd_sin_ok;
+static void snd_sin_init(void)
+{
+    uint32_t i;
+    for (i = 0; i < 2048u; i++) snd_sin_tab[i] = (int16_t)snd_sine(i << 21);
+    snd_sin_ok = 1;
+}
+#define SND_SIN(ph) ((int32_t)snd_sin_tab[(ph) >> 21])
+
 /* ---- the instruments ----------------------------------------------------------------------------------- */
 /* a decay per control tick for a T60 of t seconds, Q16 (folded at compile time: exp(-x) to the cubic term, x small) */
 #define SND_X(t) (6.907755 * 32.0 / 44100.0 / (t))
@@ -233,6 +245,7 @@ static volatile uint32_t snd_qw, snd_qr;        /* main writes snd_qw, the inter
 static snd_req_t snd_later[SND_LATER];          /* the interrupt's: pings waiting for their time */
 static uint32_t snd_later_at[SND_LATER];
 static uint32_t snd_frames;                     /* frames rendered (the interrupt's clock) */
+static int32_t snd_mix[256][3];                 /* the block: left, right, what goes to the cathedral */
 static volatile uint32_t snd_ceiling = 16384, snd_rev = 160;
 static int32_t snd_lim = 32768;                 /* the limiter's gain, Q15 */
 static volatile uint32_t snd_peak;              /* the last block's loudest sample after the ceiling (tests, the panel) */
@@ -292,7 +305,7 @@ static void snd_take(const snd_req_t *r)
 
 static void snd_render(int32_t *out, uint32_t n)
 {
-    uint32_t i, k, j;
+    uint32_t i, k;
     int32_t peak = 0, g, g0 = snd_lim, ceil = (int32_t)snd_ceiling;
     while (snd_qr != snd_qw) {                  /* the main loop's requests: now, or later */
         snd_req_t r = snd_q[snd_qr % 64u];
@@ -311,39 +324,52 @@ static void snd_render(int32_t *out, uint32_t n)
     for (k = 0; k < SND_LATER; k++)             /* pings whose time has come (to the block) */
         if (snd_later[k].kind && (int32_t)(snd_frames + n - snd_later_at[k]) >= 0) { snd_take(&snd_later[k]); snd_later[k].kind = 0; }
 
-    for (i = 0; i < n; i++) {
-        int32_t l = 0, r = 0, wet = 0, s;
-        if (!(snd_ctl_count++ % TN_CTL))
-            for (k = 0; k < TN_VOICES; k++)
-                if (snd_v[k].on) snd_control(&snd_v[k]);
-        for (k = 0; k < TN_VOICES; k++) {
-            snd_voice_t *v = &snd_v[k];
-            const snd_inst_t *in;
-            int32_t acc = 0;
-            if (!v->on) continue;
-            in = &SND_INST[v->inst];
-            for (j = 0; j < in->np; j++) {
-                uint32_t ph = v->ph[j];
-                if (j == 0u && v->minc) {        /* FM: the modulator bends the first partial */
-                    v->mph += v->minc;
-                    ph += (uint32_t)(snd_sine(v->mph) * (int32_t)(v->midx >> 16)) << 4;
+    if (n > 256u) n = 256u;
+    if (!snd_sin_ok) snd_sin_init();
+    memset(snd_mix, 0, sizeof snd_mix);
+    for (k = 0; k < TN_VOICES; k++) {            /* each voice through the block, a control tick at a time */
+        snd_voice_t *v = &snd_v[k];
+        uint32_t c0;
+        for (c0 = 0; c0 < n && v->on; c0 += TN_CTL) {
+            const snd_inst_t *in = &SND_INST[v->inst];
+            uint32_t np = in->np, c1 = c0 + TN_CTL > n ? n : c0 + TN_CTL;
+            int32_t gl = v->gl, gr = v->gr, rv = in->rev;
+            int32_t *mx = &snd_mix[0][0];
+            snd_control(v);
+            {
+                uint32_t ph0 = v->ph[0], ph1 = v->ph[1], ph2 = v->ph[2], ph3 = v->ph[3];
+                uint32_t in0 = v->inc[0], in1 = v->inc[1], in2 = v->inc[2], in3 = v->inc[3];
+                int32_t a0 = v->a[0], a1 = v->a[1], a2 = v->a[2], a3 = v->a[3];
+                int32_t d0 = v->da[0], d1 = v->da[1], d2 = v->da[2], d3 = v->da[3];
+                uint32_t mph = v->mph, minc = v->minc, midx = v->midx >> 16;
+                int32_t gain = v->gain, dgain = v->dgain, click = v->click;
+                for (i = c0; i < c1; i++) {
+                    int32_t acc, s;
+                    uint32_t ph = ph0;
+                    if (minc) { mph += minc; ph += (uint32_t)(SND_SIN(mph) * (int32_t)midx) << 4; }   /* FM bends partial 0 */
+                    a0 += d0; acc = (SND_SIN(ph) * (a0 >> 8)) >> 15; ph0 += in0;
+                    if (np > 1u) { a1 += d1; acc += (SND_SIN(ph1) * (a1 >> 8)) >> 15; ph1 += in1; }
+                    if (np > 2u) { a2 += d2; acc += (SND_SIN(ph2) * (a2 >> 8)) >> 15; ph2 += in2; }
+                    if (np > 3u) { a3 += d3; acc += (SND_SIN(ph3) * (a3 >> 8)) >> 15; ph3 += in3; }
+                    if (click > 0) {                 /* the strike: noise, its highs (a difference), falling fast */
+                        int32_t nz = (int32_t)(snd_rand() & 0xFFFFu) - 32768, hp = nz - v->cl_last;
+                        v->cl_last = nz;
+                        acc += (hp * (click >> 3)) >> 15;
+                        click -= (click >> 5) + 1;
+                    }
+                    if (dgain) { gain += dgain; s = (acc * (gain >> 8)) >> 15; } else s = acc;
+                    mx[3u * i] += s * gl >> 6;
+                    mx[3u * i + 1u] += s * gr >> 6;
+                    mx[3u * i + 2u] += s * rv >> 8;
                 }
-                v->a[j] += v->da[j];
-                acc += (snd_sine(ph) * (v->a[j] >> 8)) >> 15;
-                v->ph[j] += v->inc[j];
+                v->ph[0] = ph0; v->ph[1] = ph1; v->ph[2] = ph2; v->ph[3] = ph3;
+                v->a[0] = a0; v->a[1] = a1; v->a[2] = a2; v->a[3] = a3;
+                v->mph = mph; v->gain = gain; v->click = click;
             }
-            if (v->click > 0) {                  /* the strike: noise, its highs (a difference), falling fast */
-                int32_t nz = (int32_t)(snd_rand() & 0xFFFFu) - 32768, hp = nz - v->cl_last;
-                v->cl_last = nz;
-                acc += (hp * (v->click >> 3)) >> 15;
-                v->click -= (v->click >> 5) + 1;
-            }
-            v->gain += v->dgain;
-            s = (acc * (v->gain >> 8)) >> 15;
-            l += s * v->gl >> 6;
-            r += s * v->gr >> 6;
-            wet += s * in->rev >> 8;
         }
+    }
+    for (i = 0; i < n; i++) {
+        int32_t l = snd_mix[i][0], r = snd_mix[i][1], wet = snd_mix[i][2], s;
         s = sb_render();                         /* sleigh bells: a little to each side, some to the room */
         l += s; r += s; wet += s >> 2;
         {                                        /* the cathedral */
