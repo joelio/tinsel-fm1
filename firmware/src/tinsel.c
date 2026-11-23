@@ -17,6 +17,7 @@
  * What platform.c offers: docs/API.md. The chip's rules: docs/RULES.md. */
 static void app_idle(void);
 #define LCD_IDLE app_idle                       /* while the screen's DMA runs: MIDI in (platform.c) */
+#define APP_NAME "TINSEL"
 #include "platform.c"
 #if BOARD_SMK37
 #include "smk_wheel.h"

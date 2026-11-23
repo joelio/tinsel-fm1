@@ -55,13 +55,13 @@ SDK_SHA256 = {
 }
 
 BOARD = "fm1"                       # fm1 (default) or smk37: BOARD env or --board
-BOARD_PREFIX = {"fm1": "FM-1_99", "smk37": "SMK-37 Pro_99"}   # identity: prefix + minor (0: a dev build)
+BOARD_PREFIX = {"fm1": "FM-1_90", "smk37": "SMK-37 Pro_90"}   # identity prefix (Tinsel: FM-1_902, fixed, for every build)
 BOARD_DEFS = {"fm1": [], "smk37": ["-DBOARD_SMK37=1"]}
 MODELS = {"pro": "SMK-37 Pro", "elite": "SMK-37 Elite", "mke": "MKE-P37"}   # smk37: one keyboard, three names
-DATA_FAMILY = "DINGHY"              # the SMK store's owner tag (store.h): 1..7 of A-Z 0-9. Your fork: your own
-SCREEN_NAME = "DINGHY"              # the update loader's screen (FM-1, ldr_screen.c): the name and its colour (RGB565)
-SCREEN_COLOUR = 0xB47F              # lilac, #B48CFF
-PRODUCT = "FM-1_990"                # Dinghy: 99N (OUR_LOADER in the installer wants FM-1_9NN). Your fork: pick your own
+DATA_FAMILY = "TINSEL"              # the SMK store's owner tag (store.h): 1..7 of A-Z 0-9
+SCREEN_NAME = "TINSEL"              # the update loader's screen (FM-1, ldr_screen.c): the name and its colour (RGB565)
+SCREEN_COLOUR = 0xFE60              # tinsel gold, #FFCC00
+PRODUCT = "FM-1_902"                # Tinsel: 902, the only free FM-1_9NN on the hub (22 Nov 2026); the same for every release
 VERSION = None                      # APP_VER for release builds
 
 
@@ -176,7 +176,7 @@ def build_app():
     cmds = [("cc", "-c", FW / "crt0.S", "-o", OUT / "crt0.o"),
             ("cc", "-c", FW / "hal" / "fm1_vec.S", "-o", OUT / "fm1_vec.o"),
             ("cc", "-c", FW / "hal" / "fm1_isr.S", "-o", OUT / "fm1_isr.o"),
-            ("cc", *flags, "-c", FW / "src" / "dinghy.c", "-o", OUT / "dinghy.o")]
+            ("cc", *flags, "-c", FW / "src" / "tinsel.c", "-o", OUT / "dinghy.o")]
     tc_all(*cmds)
     elf = OUT / "dinghy.elf"
     ld = FW / "app.ld"
@@ -298,7 +298,7 @@ def mmio_check():
 def main():
     global PRODUCT, VERSION, BOARD, APP_SLOT
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", metavar="X.Y", help="release build: identity FM-1_99Y, version string X.Y")
+    ap.add_argument("--release", metavar="X.Y", help="release build: version string X.Y (the identity stays FM-1_902)")
     ap.add_argument("--board", choices=sorted(BOARD_PREFIX), default=None,
                     help="target board: fm1 (default) or smk37 (default: $BOARD, else fm1)")
     ap.add_argument("--model", choices=sorted(MODELS), default=None,
@@ -318,15 +318,14 @@ def main():
         BOARD_DEFS[BOARD] = [*BOARD_DEFS[BOARD], f'-DSMK_MODEL="{MODELS[model]}"']
         BOARD_PREFIX[BOARD] = BOARD_PREFIX[BOARD].replace(MODELS["pro"], MODELS[model])
         suffix += "-" + model
-    PRODUCT = BOARD_PREFIX[BOARD] + "0"
+    PRODUCT = BOARD_PREFIX[BOARD] + "2"
     name = f"dinghy{suffix}.fwsc"
     if a.release:                   # one digit each: the identity has room for two (X.Y; a .Z only in the text)
         m = re.fullmatch(r"(\d)\.(\d)(\.\d)?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z or X.Y-suffix, one digit each")
-        PRODUCT = BOARD_PREFIX[BOARD] + m[2]
         VERSION = m[1] + "." + m[2] + (m[3] or "")
-        name = f"dinghy-{a.release}{suffix}.fwsc"
+        name = f"tinsel-{a.release}{suffix}.fwsc"
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:

@@ -18,6 +18,9 @@ run() { echo "== $1"; shift; "$@" || fail=1; }
 
 [ -f build/dinghy.fwsc ] || { echo "run ./build.sh first"; exit 1; }
 
+$CC -Ifirmware/hal -Ifirmware/src -Ifirmware/gen -o "$OUT/tn_test" tests/tn_test.c
+run "Tinsel: the store window, the sound, the carols, the games, the calendar" "$OUT/tn_test"
+
 run "FM-1 app on the host: the default script plays, screens and sound" sh tests/run_host.sh
 run "SMK-37 app on the host: the default script" env BOARD=smk37 sh tests/run_host.sh
 run "FM-1 MIDI: USB, the TRS jack, a clock, the channel" sh tests/run_host.sh tests/scripts/midi.txt
@@ -56,7 +59,7 @@ for m in ":SMK-37 Pro_99" "-elite:SMK-37 Elite_99" "-mke:MKE-P37_99"; do
     for f in build/dinghy*-smk37${m%%:*}.fwsc; do
         [ -f "$f" ] || continue
         found=1
-        v=$(echo "$f" | sed -n 's/.*dinghy-[0-9]\.\([0-9]\).*/\1/p'); v=${v:-0}
+        v=$(echo "$f" | sed -n 's/.*tinsel-[0-9]\.\([0-9]\).*/\1/p'); v=${v:-0}
         run "SMK-37 package $f: layout, identity ${m#*:}$v, the loader marker" python3 tests/smk_pkg_test.py "$f" "${m#*:}$v"
     done
 done

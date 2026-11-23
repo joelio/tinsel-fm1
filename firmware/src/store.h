@@ -2,10 +2,17 @@
 /* Where Dinghy keeps your data in flash, per board (platform.c: settings_*, blob_*, slot_*). Macros and compile-time
  * checks only, so the host tests include it (tests/smk_flash_test.c).
  *
- *              FM-1                          SMK-37 (Pro, Elite, MKE-P37)
- *   settings   0xFC000, 1 sector             0x9D000, 1 sector
- *   blobs      0xF4000.. NBLOB sectors       0x9E000.. NBLOB sectors
- *   slots      0x97000.. NSLOT x SLOT_SECT   0xC2000.. NSLOT x SLOT_SECT (USRFLASH, SLOOP's sample slots)
+ *              FM-1 (Tinsel's own window)    SMK-37 (Pro, Elite, MKE-P37)
+ *   settings   0xB7000, 1 sector             0x9D000, 1 sector
+ *   blobs      0xB8000.. NBLOB sectors       0x9E000.. NBLOB sectors
+ *   slots      0xC0000.. NSLOT x SLOT_SECT   0xC2000.. NSLOT x SLOT_SECT (USRFLASH, SLOOP's sample slots)
+ *
+ * Tinsel (docs/DESIGN.md section 14): every Dinghy fork keeps its store at Dinghy's places (settings 0xFC000, blobs
+ * 0xF4000.., slots 0x97000..0xB6FFF). A magic stops a firmware reading another's data, not overwriting it, and Tinsel
+ * saves by itself (an Advent door, a date): on a unit that goes back and forth between Tinsel and Melisma (or Dinghy)
+ * it would wipe theirs. So Tinsel keeps its whole store in 0xB7000..0xDFFFF: inside Felucca's FL_DATA, above Dinghy's
+ * slots, below the update staging at 0xE0000, exactly 1 + 8 + 8 x 4 sectors. FL_RANGE_OK allows that window and the
+ * update staging, nothing else.
  *   owner tag  -                             0xAF000: "SMK37DATA" + DATA_FAMILY (smk_owner_check)
  *
  * On the FM-1 the other firmwares of the family keep their data in 0x97000..0xFBFFF too: a new firmware finds the
@@ -18,7 +25,7 @@
 #include <stdint.h>
 
 #ifndef STORE_MAGIC
-#define STORE_MAGIC 0x59474E44u                 /* "DNGY": settings and blobs (slots: "SLOT"); your fork: your own */
+#define STORE_MAGIC 0x4C534E54u                 /* "TNSL": Tinsel's settings and blobs (slots: "SLOT" ^ this) */
 #endif
 #define NBLOB 8u                                /* blobs: one 4 KiB sector each */
 #define NSLOT 8u                                /* slots: SLOT_SECT sectors each, for something bigger (samples, songs) */
@@ -36,12 +43,12 @@
                              FL_IN(off, n, BLOBS_AT, BLOBS_AT + NBLOB * 0x1000u) || FL_IN(off, n, OWNER_AT, OWNER_AT + 0x1000u) || \
                              FL_IN(off, n, SLOTS_AT, SLOTS_AT + NSLOT * SLOT_SECT * 0x1000u))
 #else
-#define SETTINGS_AT 0x000FC000u                 /* (Felucca's globals area) */
-#define BLOBS_AT 0x000F4000u
-#define SLOTS_AT 0x00097000u                    /* (Felucca's main store, FL_DATA) */
-#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, SETTINGS_AT, SETTINGS_AT + 0x1000u) || \
-                             FL_IN(off, n, BLOBS_AT, BLOBS_AT + NBLOB * 0x1000u) || \
-                             FL_IN(off, n, SLOTS_AT, SLOTS_AT + NSLOT * SLOT_SECT * 0x1000u))
+#define TN_STORE_LO 0x000B7000u                 /* Tinsel's window: [TN_STORE_LO, TN_STORE_HI) */
+#define TN_STORE_HI 0x000E0000u
+#define SETTINGS_AT 0x000B7000u
+#define BLOBS_AT 0x000B8000u
+#define SLOTS_AT 0x000C0000u
+#define FL_RANGE_OK(off, n) (FL_IN(off, n, FL_OTA_LO, FL_OTA_HI) || FL_IN(off, n, TN_STORE_LO, TN_STORE_HI))
 #endif
 #include "fm1_flash_map.h"
 #define SECTOR_MAX (4096u - 12u)                /* settings, a blob: the sector minus the header */
@@ -64,6 +71,9 @@ static void smk_owner_tag(uint8_t tag[16])
         tag[i] = i < 9u ? (uint8_t)"SMK37DATA"[i] : i - 9u < sizeof FAM - 1u ? (uint8_t)FAM[i - 9u] : 0u;
 }
 #else
-_Static_assert(SLOTS_AT >= FL_DATA_LO && SLOTS_AT + NSLOT * SLOT_SECT * 0x1000u <= FL_DATA_HI, "FM-1 store: slots outside FL_DATA");
-_Static_assert(BLOBS_AT >= 0xEA000u && BLOBS_AT + NBLOB * 0x1000u <= SETTINGS_AT, "FM-1 store: blobs (free, below the settings)");
+_Static_assert(TN_STORE_LO >= FL_DATA_LO && TN_STORE_HI <= FL_DATA_HI && TN_STORE_HI <= FL_OTA_LO, "Tinsel store: outside FL_DATA");
+_Static_assert(TN_STORE_LO >= 0xB7000u, "Tinsel store: reaches Dinghy's (Melisma's) slots");
+_Static_assert(SETTINGS_AT == TN_STORE_LO && SETTINGS_AT + 0x1000u <= BLOBS_AT, "Tinsel store: settings");
+_Static_assert(BLOBS_AT + NBLOB * 0x1000u <= SLOTS_AT, "Tinsel store: blobs overlap the slots");
+_Static_assert(SLOTS_AT + NSLOT * SLOT_SECT * 0x1000u <= TN_STORE_HI, "Tinsel store: slots past the window");
 #endif
