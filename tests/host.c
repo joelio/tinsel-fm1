@@ -79,6 +79,14 @@ static void fm1_irq_on(void) {}
 static void fm1_led_key(uint32_t id, int on) { if (on) host_leds |= (uint64_t)1 << id; else host_leds &= ~((uint64_t)1 << id); }
 static uint64_t host_glow;                      /* the dim layer (not in the film log) */
 static void fm1_led_key_glow(uint32_t id, int on) { if (on) host_glow |= (uint64_t)1 << id; else host_glow &= ~((uint64_t)1 << id); }
+static uint8_t host_lvl[64];                    /* FM1_LED_LEVELS: each LED's level 0..64 (lit from 32 in the film log) */
+static void fm1_led_level(uint32_t id, uint32_t lvl)
+{
+    if (id >= 41u) return;
+    host_lvl[id] = (uint8_t)(lvl > 64u ? 64u : lvl);
+    fm1_led_key(id, lvl >= 32u);
+    fm1_led_key_glow(id, lvl && lvl < 32u);
+}
 
 /* the screen: 240 x 240 RGB565, as the ST7789 gets it (gfx.c sends the bytes swapped) */
 static uint16_t fb[240 * 240];

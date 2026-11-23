@@ -220,6 +220,62 @@ static void fm1__keys(uint32_t p)                  /* the keys of column p, just
 }
 
 static void fm1__frame(void);
+#ifdef FM1_LED_LEVELS
+/* Per-LED brightness (Tinsel; the idea from felucca-bsp's fm1_led_anim.h, written for Dinghy's tick). With
+ * FM1_LED_LEVELS defined the levels own fm1_led and fm1_led_dim: fm1_led_level(id, 0..64) and nothing else sets them.
+ *   0       dark
+ *   1..7    the glow layer (FM1_GLOW_NS, ~1/24 of lit)
+ *   8..63   lit in level/64 of the frames (a frame is ~1.1 ms): a sigma-delta, so 8 is lit one frame in eight
+ *           (~114 Hz, no flicker), 32 every other frame
+ *   64      lit
+ * The frame does this for the 41 LEDs: a few adds each, in the tick that already runs. */
+static volatile uint8_t fm1_led_lvl[FM1_NKEY];
+static uint8_t fm1__led_acc[FM1_NKEY];
+static uint8_t fm1__led_pos[FM1_NKEY];          /* column << 3 | row bit, built once by fm1_led_level; 0xFF none */
+static volatile uint8_t fm1__led_ready;
+static void fm1__led_levels(void)
+{
+    uint32_t id, lit[FM1_NCOL], dim[FM1_NCOL], c;
+    if (!fm1__led_ready)
+        return;
+    for (c = 0; c < FM1_NCOL; c++)
+        lit[c] = dim[c] = 0;
+    for (id = 0; id < FM1_NKEY; id++) {
+        uint32_t lv = fm1_led_lvl[id], pos = fm1__led_pos[id], on = 0;
+        if (pos == 0xFFu || !lv)
+            continue;
+        if (lv >= 64u)
+            on = 1;
+        else if (lv >= 8u) {
+            uint32_t a = fm1__led_acc[id] + lv;
+            on = a >= 64u;
+            fm1__led_acc[id] = (uint8_t)(on ? a - 64u : a);
+        } else
+            dim[pos >> 3] |= 1u << (pos & 7u);
+        if (on)
+            lit[pos >> 3] |= 1u << (pos & 7u);
+    }
+    for (c = 0; c < FM1_NCOL; c++) {
+        fm1_led[c] = (uint8_t)lit[c];
+        fm1_led_dim[c] = (uint8_t)dim[c];
+    }
+}
+static void fm1_led_level(uint32_t id, uint32_t lvl)   /* main loop: an LED's level, 0..64 */
+{
+    if (!fm1__led_ready) {
+        uint32_t i, p, r;
+        for (i = 0; i < FM1_NKEY; i++)
+            fm1__led_pos[i] = 0xFFu;
+        for (p = 0; p < FM1_NCOL; p++)
+            for (r = 1; r < 5u; r++)
+                if (FM1_KEYMAP[r][p] >= 0)
+                    fm1__led_pos[FM1_KEYMAP[r][p]] = (uint8_t)(p << 3 | r);
+        fm1__led_ready = 1;
+    }
+    if (id < FM1_NKEY)
+        fm1_led_lvl[id] = (uint8_t)(lvl > 64u ? 64u : lvl);
+}
+#endif
 
 static void fm1_input_scan(void)
 {
@@ -280,6 +336,9 @@ static void fm1__frame(void)
             *sub = 0;
         }
     }
+#ifdef FM1_LED_LEVELS
+    fm1__led_levels();
+#endif
     fm1_in.frames++;
 }
 
