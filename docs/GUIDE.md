@@ -195,3 +195,19 @@ back to Tinsel keeps them, and Tinsel never touches another firmware's saved thi
 | It will not start | Hold OCT- while switching on: the updater (no sound). Install again from there |
 | It will not start at all | Hold REC while switching on: download mode, for M-Flasher |
 | You want another firmware back | Install it as usual; Tinsel can always be installed again later |
+
+## Spoken calls (a private build)
+
+The public Tinsel uses tunes and pictures for its calls. A private build can also *say* them ("Ring it!", "Twist
+it!", "Jingle it!", "Shhh", "Well done!", "Ho ho ho!", "Merry Christmas!", "Hooray!"), for your own units only:
+
+1. Put recordings in `private/voices/` (`ring.wav`, `twist.wav`, `jingle.wav`, `shh.wav`, `welldone.wav`,
+   `hohoho.wav`, `merry.wav`, `hooray.wav`): your own voice, or made with `tools/make_voices.py`, which asks
+   ElevenLabs text-to-speech for any that are missing (the key comes from the macOS keychain, service
+   `elevenlabs-api-key`).
+2. `tools/make_voices.py --no-fetch` (or without `--no-fetch` to fetch the missing ones) writes
+   `firmware/gen/tn_voice.h`.
+3. `DINGHY_DEFS=-DTN_VOICE ./build.sh` builds the package with them.
+
+`private/` and the generated header are never committed: depending on how they were made, generated voices may not
+be shareable, and a family's recordings are its own.

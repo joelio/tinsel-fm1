@@ -7,3 +7,4 @@ __pycache__/
 recovery/
 .tools
 private/
+firmware/gen/tn_voice.h

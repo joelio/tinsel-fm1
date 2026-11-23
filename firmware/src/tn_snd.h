@@ -242,7 +242,13 @@ static uint16_t rv_pos[4];
 static int32_t rv_lp[4], rv_hp;
 
 /* ---- the main loop's requests --------------------------------------------------------------------------- */
-enum { RQ_PING = 1, RQ_SHAKE, RQ_HUSH };
+enum { RQ_PING = 1, RQ_SHAKE, RQ_HUSH, RQ_SAY };
+/* spoken call-outs (a private build: TN_VOICE and tools/make_voices.py); without them snd_say does nothing */
+enum { VO_RING, VO_TWIST, VO_JINGLE, VO_SHH, VO_WELLDONE, VO_HOHOHO, VO_MERRY, VO_HOORAY, VO_COUNT };
+#ifdef TN_VOICE
+#include "tn_voice.h"
+static struct { const int8_t *pcm; uint32_t n, pos; } snd_say_v;   /* pos: Q16 samples of the clip */
+#endif
 typedef struct { uint8_t kind, inst, midi, vel; int8_t pan; uint8_t pad; uint16_t delay; } snd_req_t;
 static snd_req_t snd_q[64];
 static volatile uint32_t snd_qw, snd_qr;        /* main writes snd_qw, the interrupt snd_qr */
@@ -270,6 +276,8 @@ static void snd_ping_at(uint32_t ms, uint32_t inst, uint32_t midi, uint32_t vel,
 static void snd_shake(uint32_t strength) { snd_put(RQ_SHAKE, 0, 0, strength, 0, 0); }
 static void snd_shake_at(uint32_t ms, uint32_t strength) { snd_put(RQ_SHAKE, 0, 0, strength, 0, ms); }
 static void snd_hush(void) { snd_put(RQ_HUSH, 0, 0, 0, 0, 0); }
+static void snd_say(uint32_t which) { snd_put(RQ_SAY, which, 0, 0, 0, 0); }
+static void snd_say_at(uint32_t ms, uint32_t which) { snd_put(RQ_SAY, which, 0, 0, 0, ms); }
 static void snd_set_ceiling(uint32_t q15) { snd_ceiling = q15 > 32767u ? 32767u : q15 < 2000u ? 2000u : q15; }
 static void snd_set_reverb(uint32_t amount) { snd_rev = amount > 255u ? 255u : amount; }
 
@@ -302,6 +310,9 @@ static void snd_fx(uint32_t which)
 static void snd_take(const snd_req_t *r)
 {
     if (r->kind == RQ_PING) snd_start(r->inst, r->midi, r->vel, r->pan);
+#ifdef TN_VOICE
+    else if (r->kind == RQ_SAY) { if (r->inst < VO_COUNT && TNV_CLIPS[r->inst].n) { snd_say_v.pcm = TNV_CLIPS[r->inst].pcm; snd_say_v.n = TNV_CLIPS[r->inst].n; snd_say_v.pos = 0; } }
+#endif
     else if (r->kind == RQ_SHAKE) {
         int32_t e = snd_sb.energy + (int32_t)(r->vel + 1u) * (32767 / 128 * 256 / 10) * 3;   /* STK: amp x 0.1 (louder here: 3x) */
         snd_sb.energy = e > (32767 << 8) ? 32767 << 8 : e;
@@ -377,6 +388,17 @@ static void snd_render(int32_t *out, uint32_t n)
         int32_t l = snd_mix[i][0], r = snd_mix[i][1], wet = snd_mix[i][2], s;
         s = sb_render();                         /* sleigh bells: a little to each side, some to the room */
         l += s; r += s; wet += s >> 2;
+#ifdef TN_VOICE
+        if (snd_say_v.pcm) {                     /* a spoken clip, 11 kHz, upsampled by a straight line */
+            uint32_t k0 = snd_say_v.pos >> 16, fr = snd_say_v.pos & 0xFFFFu;
+            int32_t a = snd_say_v.pcm[k0], b = k0 + 1u < snd_say_v.n ? snd_say_v.pcm[k0 + 1u] : 0, v;
+            v = (a * 65536 + (b - a) * (int32_t)fr) >> 16;
+            v *= 70;
+            l += v; r += v; wet += v >> 3;
+            snd_say_v.pos += 65536u * TN_VOICE_RATE / TN_FS;
+            if ((snd_say_v.pos >> 16) >= snd_say_v.n) snd_say_v.pcm = 0;
+        }
+#endif
         {                                        /* the cathedral */
             int32_t d[4], h0, h1, h2, h3, in_ = (wet * (int32_t)snd_rev) >> 9;
             rv_hp += ((in_ << 8) - rv_hp) >> 6;  /* keep its lows out (the speaker wastes them); Q8, so it settles at 0 */

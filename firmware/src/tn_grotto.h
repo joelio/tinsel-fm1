@@ -144,6 +144,7 @@ static void gr_input(const tn_input_t *in)
     }
     if (b >> TB_PLAY & 1u) {                    /* the big moment */
         snd_fx(SFX_FANFARE);
+        snd_say_at(900, VO_HOHOHO);
         gr.storm_until = now + 4000u;
         gr.sparkle_until = now + 2500u;
         gr.chase_from = now;

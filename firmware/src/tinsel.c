@@ -285,6 +285,7 @@ static void app_main(void)
     scene_go(SC_BOOT);
     snd_shake(127); snd_shake_at(350, 90); snd_shake_at(700, 127);
     snd_ping_at(150, TI_CELESTA, 84, 90, -30); snd_ping_at(400, TI_CELESTA, 88, 90, 0); snd_ping_at(650, TI_CELESTA, 91, 100, 30);
+    snd_say_at(900, VO_MERRY);
     for (;;) {
         uint32_t now;
         uint8_t st, d1, d2;

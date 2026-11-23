@@ -83,6 +83,7 @@ static void cb_input(const tn_input_t *in)
         cb.ended = 1;
         cb.t_end = now;
         snd_fx(SFX_CHEER);
+        snd_say_at(300, VO_HOORAY);
         snd_ping_at(400, TI_HANDBELL, 79, 100, -40);
         snd_ping_at(550, TI_HANDBELL, 84, 100, 40);
     }

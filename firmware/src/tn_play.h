@@ -73,6 +73,8 @@ static struct { jingle_t j; uint8_t playing, over, best; uint32_t t_over, t_good
 static void ji_cue(uint32_t call)               /* each call has its own sound: no reading needed */
 {
     uint32_t i;
+    static const uint8_t SAY[JC_COUNT] = {VO_RING, VO_TWIST, VO_JINGLE, VO_SHH};
+    snd_say_at(call == JC_SHH ? 0u : 380u, SAY[call % JC_COUNT]);   /* (a private build says it, after its tune) */
     switch (call) {
     case JC_RING: snd_ping(TI_HANDBELL, 72, 100, 0); snd_ping_at(120, TI_HANDBELL, 76, 100, 0); snd_ping_at(240, TI_HANDBELL, 79, 110, 0); break;
     case JC_TWIST: for (i = 0; i < 8u; i++) snd_ping_at(i * 40u, TI_CHIME, 76u + i * 2u, 60, (int32_t)i * 16 - 56); break;
@@ -92,7 +94,7 @@ static void ji_input(const tn_input_t *in)
         if ((in->btn_down >> TB_PLAY & 1u) && !ji.j.active && ji.j.score == 0u && ji.j.level == LV_LITTLE) {}   /* (a press of PLAY to start is not an answer) */
         else e = jingle_act(&ji.j, JA_BUTTON, 0, now);
     }
-    if (e == JE_GOOD) { ji.t_good = now; snd_fx(SFX_CHEER); }
+    if (e == JE_GOOD) { ji.t_good = now; snd_fx(SFX_CHEER); if (ji.j.score % 5u == 0u) snd_say_at(250, VO_WELLDONE); }
     else if (e == JE_WRONG) snd_fx(SFX_NOPE);
     else if (e == JE_MISS) { ji.t_bad = now; snd_ping(TI_TOY, 48, 70, 0); }
     else if (e == JE_OVER) { ji.over = 1; ji.t_over = now; ji.best = (uint8_t)pl_keep_best(GM_JINGLE, ji.j.score); snd_fx(ji.best ? SFX_FANFARE : SFX_CHEER); }

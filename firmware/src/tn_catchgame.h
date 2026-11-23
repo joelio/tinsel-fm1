@@ -69,6 +69,7 @@ static void cg_input(const tn_input_t *in)
                 cg.t_catch = now;
                 cg.catch_x = cg_lane_x(catch_lane_of(k));
                 cg_note(110);
+                if (cg.g.score % 10u == 0u) snd_say_at(200, VO_WELLDONE);
             } else
                 snd_ping(TI_CHIME, gr_note(k) + 12u, 35, 0);   /* soft, in tune */
         }
