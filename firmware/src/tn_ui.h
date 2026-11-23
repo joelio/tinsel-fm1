@@ -48,6 +48,23 @@ static int gesture_step(gesture_t *g, uint32_t btn, uint32_t now)
 /* deterministic little random numbers (xorshift32), seeded where they are used */
 static uint32_t tn_rand(uint32_t *s) { uint32_t x = *s ? *s : 0x9E3779B9u; x ^= x << 13; x ^= x >> 17; x ^= x << 5; return *s = x; }
 
+/* the pictures (drawn in tn_pics.h) */
+enum {
+    PIC_BELLS, PIC_PUDDING, PIC_HOLLY, PIC_STAR, PIC_CROWN, PIC_ANGEL, PIC_CANDLE, PIC_BELL,   /* the carols' (CP_...) */
+    PIC_TREE, PIC_BOOK, PIC_PRESENT, PIC_HOUSE, PIC_WRAPPED, PIC_WAND, PIC_EAR, PIC_FOLLOW, PIC_COUNT
+};
+
+/* a number as text (no printf on the chip) */
+static char *tn_utoa(char *b, uint32_t v)
+{
+    char t[11];
+    uint32_t n = 0, i;
+    do { t[n++] = (char)('0' + v % 10u); v /= 10u; } while (v && n < 10u);
+    for (i = 0; i < n; i++) b[i] = t[n - 1u - i];
+    b[n] = 0;
+    return b + n;
+}
+
 /* black keys among the 27, F3 = 0 */
 static int tn_black(uint32_t k) { return (0x54Au >> ((k + 5u) % 12u)) & 1u; }
 #endif

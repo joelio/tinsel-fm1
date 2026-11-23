@@ -1,4 +1,4 @@
-# Tinsel on the host: the boot plate, the Grotto (keys, the robin, PLAY, buttons), HOME
+# Tinsel on the host: the boot plate, the Grotto (keys, the robin, PLAY, buttons), HOME to the Sleigh, each screen
 500 shot
 1500 keys 0x1
 1600 keys 0
@@ -9,9 +9,6 @@
 2600 enc 2 8
 2700 enc 3 -6
 2900 shot
-3000 enc 2 6
-3100 enc 3 -6
-3300 shot
 3500 keys 0x7FFFFFF
 3600 keys 0
 3700 shot
@@ -19,9 +16,50 @@
 4400 shot
 4600 btn 2
 5000 shot
-5200 btn 3
-5300 btn 4
-5500 shot
+# the Sleigh: HOME, then a turn to the Carol Book
 6000 btn 8
-6500 shot
-8000 end
+6300 shot
+6500 enc 0 1
+6800 shot
+# the Carol Book: Magic, eight presses
+7000 btn 12
+7400 keys 0x4
+7500 keys 0
+7600 keys 0x100
+7700 keys 0
+7800 keys 0x4000
+7900 keys 0
+8000 keys 0x20
+8100 shot
+8200 keys 0
+# back: HOME twice to the Sleigh, two turns to Present Catch
+8500 btn 8
+8700 btn 8
+8900 enc 0 1
+9100 btn 12
+9300 shot
+9400 btn 12
+12000 shot
+12100 keys 0x7FFFFFF
+12200 keys 0
+14000 shot
+# HOME, HOME, three turns to Advent
+15000 btn 8
+15200 btn 8
+15400 enc 0 3
+15600 btn 12
+15800 shot
+15900 keys 0x1
+16000 keys 0
+16500 shot
+# the grown-up panel: EDIT and SAVE held 2 s
+18000 btndown 6
+18000 btndown 9
+20200 btnup 6
+20200 btnup 9
+20400 shot
+20500 enc 0 1
+20700 shot
+20800 btn 8
+21300 shot
+22000 end

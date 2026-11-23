@@ -1,0 +1,11 @@
+title: Silent Night
+source: Franz Xaver Gruber, "Stille Nacht" (1818). Transcribed by ear for Tinsel; to check against a pre-1930 print.
+meter: 6/8
+tempo: 50
+pickup: 0
+picture: star
+jolly: no
+tune: G4:3 A4:1 G4:2 E4:6 | G4:3 A4:1 G4:2 E4:6 | D5:4 D5:2 B4:6 | C5:4 C5:2 G4:6 |
+      A4:4 A4:2 C5:3 B4:1 A4:2 | G4:3 A4:1 G4:2 E4:6 | A4:4 A4:2 C5:3 B4:1 A4:2 | G4:3 A4:1 G4:2 E4:6 |
+      D5:4 D5:2 F5:3 D5:1 B4:2 | C5:6 E5:6 | C5:3 G4:1 E4:2 G4:3 F4:1 D4:2 | C4:12 |
+chords: C:12 | C:12 | G7:12 | C:12 | F:12 | C:12 | F:12 | C:12 | G7:12 | C:12 | C:6 G7:6 | C:12 |

@@ -136,37 +136,48 @@ static void g_text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char 
     g_text(cx - text_w(f, s) / 2, y, f, s, c, aa);
 }
 
-/* send what changed: per band, the columns from the first to the last that differ (whole words of 4 pixels) */
+/* send what changed: per band, the stretches of columns that differ (whole words of 4 pixels; stretches closer than
+ * G_GAP words are sent as one, a window command costing about as much as that many pixels) */
+#define G_GAP 6u
+static void g_send(uint32_t y0, uint32_t x0, uint32_t x1, uint32_t *which)
+{
+    uint32_t w = x1 - x0, y, x;
+    uint16_t *px = g_px[*which];
+    for (y = 0; y < G_BAND; y++) {
+        const uint8_t *src = &g_fb[(y0 + y) * G_W + x0];
+        uint16_t *dst = px + y * w;
+        for (x = 0; x < w; x++) dst[x] = g_pal[src[x]];
+        memcpy(&g_shown[(y0 + y) * G_W + x0], src, w);
+    }
+    lcd_blit(x0, y0, w, G_BAND, px);             /* (it waits for the other buffer's transfer before it starts) */
+    g_sent_px += w * G_BAND;
+    *which ^= 1u;
+}
 static void g_flush(void)
 {
     uint32_t band, which = 0;
     g_sent_px = 0;
     for (band = 0; band < G_NBAND; band++) {
-        uint32_t y0 = band * G_BAND, x0 = G_W, x1 = 0, x, y, w;
-        uint16_t *px;
-        if (g_all) { x0 = 0; x1 = G_W; }
-        else
-            for (y = y0; y < y0 + G_BAND; y++) {
-                const uint32_t *a = (const uint32_t *)(const void *)&g_fb[y * G_W], *b = (const uint32_t *)(const void *)&g_shown[y * G_W];
-                uint32_t i;
-                for (i = 0; i < G_W / 4u; i++)
-                    if (a[i] != b[i]) {
-                        if (i * 4u < x0) x0 = i * 4u;
-                        if (i * 4u + 4u > x1) x1 = i * 4u + 4u;
-                    }
-            }
-        if (x1 <= x0) continue;
-        w = x1 - x0;
-        px = g_px[which];
-        for (y = 0; y < G_BAND; y++) {
-            const uint8_t *src = &g_fb[(y0 + y) * G_W + x0];
-            uint16_t *dst = px + y * w;
-            for (x = 0; x < w; x++) dst[x] = g_pal[src[x]];
-            memcpy(&g_shown[(y0 + y) * G_W + x0], src, w);
+        uint32_t y0 = band * G_BAND, y, i, lo, hi;
+        uint32_t m[2] = {0, 0};                  /* changed words: 60 of them, bits 0..31 and 32..59 */
+        if (g_all) { g_send(y0, 0, G_W, &which); continue; }
+        for (y = y0; y < y0 + G_BAND; y++) {
+            const uint32_t *a = (const uint32_t *)(const void *)&g_fb[y * G_W], *b = (const uint32_t *)(const void *)&g_shown[y * G_W];
+            for (i = 0; i < G_W / 4u; i++)
+                if (a[i] != b[i]) m[i >> 5] |= 1u << (i & 31u);
         }
-        lcd_blit(x0, y0, w, G_BAND, px);
-        g_sent_px += w * G_BAND;
-        which ^= 1u;
+        if (!m[0] && !m[1]) continue;
+        for (i = 0; i < G_W / 4u;) {
+            if (!(m[i >> 5] >> (i & 31u) & 1u)) { i++; continue; }
+            lo = i;
+            hi = i;
+            for (; i < G_W / 4u; i++) {          /* the stretch, through gaps shorter than G_GAP */
+                if (m[i >> 5] >> (i & 31u) & 1u) hi = i;
+                else if (i - hi > G_GAP) break;
+            }
+            g_send(y0, lo * 4u, hi * 4u + 4u, &which);
+            i = hi + 1u;
+        }
     }
     g_all = 0;
 }

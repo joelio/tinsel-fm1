@@ -1,0 +1,13 @@
+title: Jingle Bells
+source: James Lord Pierpont, "One Horse Open Sleigh" (Boston: Oliver Ditson, 1857); the chorus. Transcribed by ear for Tinsel; to check against the 1857 print.
+meter: 4/4
+tempo: 112
+pickup: 0
+picture: bells
+jolly: yes
+tune: B4:4 B4:4 B4:8 | B4:4 B4:4 B4:8 | B4:4 D5:4 G4:6 A4:2 | B4:16 |
+      C5:4 C5:4 C5:6 C5:2 | C5:4 B4:4 B4:4 B4:2 B4:2 | B4:4 A4:4 A4:4 B4:4 | A4:8 D5:8 |
+      B4:4 B4:4 B4:8 | B4:4 B4:4 B4:8 | B4:4 D5:4 G4:6 A4:2 | B4:16 |
+      C5:4 C5:4 C5:6 C5:2 | C5:4 B4:4 B4:4 B4:2 B4:2 | D5:4 D5:4 C5:4 A4:4 | G4:16 |
+chords: G:16 | G:16 | G:16 | G:16 | C:16 | G:16 | A7:16 | D7:16 |
+        G:16 | G:16 | G:16 | G:16 | C:16 | G:16 | D7:16 | G:16 |

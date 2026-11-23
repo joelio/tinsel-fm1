@@ -1,0 +1,11 @@
+title: Shchedryk (Carol of the Bells)
+source: Mykola Leontovych, "Shchedryk" (1916), the ostinato; not Wilhousky's 1936 English version. Transcribed by ear for Tinsel; to check against a pre-1930 print.
+meter: 3/4
+tempo: 120
+pickup: 0
+picture: bell
+jolly: no
+tune: D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 |
+      F5:4 Eb5:2 F5:2 D5:4 | F5:4 Eb5:2 F5:2 D5:4 | F5:4 Eb5:2 F5:2 D5:4 | F5:4 Eb5:2 F5:2 D5:4 |
+      D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 | D5:4 C5:2 D5:2 Bb4:4 |
+chords: Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 | Gm:12 |

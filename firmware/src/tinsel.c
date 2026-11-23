@@ -22,26 +22,19 @@ static void app_idle(void);
 #define TN_POOL
 #endif
 #include "tn_ui.h"
+#include "tn_set.h"
 #include "tn_snd.h"
 #include "tn_gfx.h"
 #include "tn_pal.h"
+#include "tn_pics.h"
+#include "tn_carol.h"
+#include "tn_catch.h"
+#include "tn_advent.h"
 
-/* ---- what is kept (DESIGN section 14) -------------------------------------------------------------------- */
-#define TN_SET_VER 1u
-typedef struct {
-    uint8_t ver, ceiling, sound, oct;           /* ceiling: 0 gentle, 1 medium, 2 full */
-    uint8_t level[8];                           /* each game's level: 0 Little Elf, 1 Elf, 2 Santa */
-    uint32_t doors;                             /* Advent doors opened, bit d-1 */
-    uint16_t date_y;                            /* the latest date Tinsel was told (0: never) */
-    uint8_t date_m, date_d;
-    uint8_t power_days, pad[3];                 /* days switched on, for a calendar that was never told the date */
-    uint16_t best[8];                           /* high scores */
-} tn_settings_t;
+/* ---- what is kept (tn_set.h) ----------------------------------------------------------------------------- */
 static tn_settings_t set;
 static uint32_t set_dirty, set_changed_at;
-static void set_defaults(void) { memset(&set, 0, sizeof set); set.ver = TN_SET_VER; }
 static void set_touch(void) { set_dirty = 1; set_changed_at = fm1_ms; }
-static const uint16_t CEILINGS[3] = {16384, 22937, 32767};   /* gentle 50 %, medium 70 %, full */
 
 /* ---- the screens ----------------------------------------------------------------------------------------- */
 enum { SC_BOOT, SC_GROTTO, SC_SLEIGH, SC_CAROL, SC_CATCH, SC_ADVENT, SC_PANEL, SC_COUNT };
@@ -51,6 +44,11 @@ static gesture_t gesture;
 static void scene_go(uint32_t s);
 
 #include "tn_grotto.h"
+#include "tn_sleigh.h"
+#include "tn_carolbook.h"
+#include "tn_catchgame.h"
+#include "tn_adventscr.h"
+#include "tn_panel.h"
 
 /* the boot plate: TINSEL in gold on a red ribbon, snow, a sleigh-bell flourish (any key skips) */
 static void boot_draw(uint32_t now)
@@ -87,6 +85,11 @@ static void scene_go(uint32_t s)
     g_all = 1;
     switch (scene) {
     case SC_GROTTO: gr_enter(); break;
+    case SC_SLEIGH: sl_enter(); break;
+    case SC_CAROL: cb_enter(); break;
+    case SC_CATCH: cg_enter(); break;
+    case SC_ADVENT: av_enter(); break;
+    case SC_PANEL: pn_enter(); break;
     default: break;
     }
 }
@@ -114,9 +117,10 @@ static void ui_pass(void)                       /* input: every pass of the main
 {
     tn_input_t in;
     read_panel(&in);
-    if (gesture_step(&gesture, in.btn, in.now)) { scene_go(SC_GROTTO); return; }   /* (the panel: to come) */
-    if (in.btn_down >> TB_HOME & 1u) {
-        scene_go(scene == SC_GROTTO ? SC_GROTTO : SC_GROTTO);
+    if (gesture_step(&gesture, in.btn, in.now)) { if (scene != SC_PANEL) scene_go(SC_PANEL); return; }
+    if (in.btn_down >> TB_HOME & 1u) {           /* HOME: back to the Grotto, from anywhere; in the Grotto, the Sleigh */
+        if (scene == SC_PANEL) pn_leave();
+        scene_go(scene == SC_GROTTO ? SC_SLEIGH : SC_GROTTO);
         return;
     }
     switch (scene) {
@@ -124,6 +128,11 @@ static void ui_pass(void)                       /* input: every pass of the main
         if (in.key_down || (in.btn_down & ~(1u << TB_EDIT | 1u << TB_SAVE)) || in.now - scene_t0 > 2800u) scene_go(SC_GROTTO);
         break;
     case SC_GROTTO: gr_input(&in); break;
+    case SC_SLEIGH: sl_input(&in); break;
+    case SC_CAROL: cb_input(&in); break;
+    case SC_CATCH: cg_input(&in); break;
+    case SC_ADVENT: av_input(&in); break;
+    case SC_PANEL: pn_input(&in); break;
     default: break;
     }
 }
@@ -134,6 +143,11 @@ static void draw_frame(uint32_t now, uint32_t dt)
     switch (scene) {
     case SC_BOOT: boot_draw(now); break;
     case SC_GROTTO: gr_tick(now, dt); gr_draw(now); gr_leds(led_lv, now); break;
+    case SC_SLEIGH: sl_draw(now); sl_leds(led_lv, now); break;
+    case SC_CAROL: cb_draw(now); cb_leds(led_lv, now); break;
+    case SC_CATCH: cg_tick(now, dt); cg_draw(now); cg_leds(led_lv, now); break;
+    case SC_ADVENT: av_draw(now); av_leds(led_lv, now); break;
+    case SC_PANEL: pn_draw(now); pn_leds(led_lv, now); return;   /* (it flushes itself: the screen test times it) */
     default: g_clear(P_NIGHT); break;
     }
     g_flush();
@@ -165,6 +179,7 @@ static void app_audio(int32_t *out, uint32_t n)
 }
 
 static uint32_t idle_ok;
+static advent_rx_t adv_rx;
 static void app_idle(void)
 {
     if (!idle_ok) return;
@@ -176,10 +191,11 @@ static void app_idle(void)
 static void app_main(void)
 {
     uint32_t last_draw = 0;
-    if (settings_load(&set, sizeof set) || set.ver != TN_SET_VER || set.ceiling > 2u) set_defaults();
-    snd_set_ceiling(CEILINGS[set.ceiling]);
+    if (settings_load(&set, sizeof set) || !tn_set_valid(&set)) tn_set_defaults(&set);
+    snd_set_ceiling(TN_CEILINGS[set.ceiling]);
     pal_load(0);
-    gr.oct = (int8_t)set.oct > 2 || (int8_t)set.oct < -1 ? 0 : (int8_t)set.oct;
+    gr.oct = (int8_t)set.oct;
+    if (advent_boot(&set)) set_touch();         /* (a calendar never told the date counts the days it is switched on) */
     scene_go(SC_BOOT);
     snd_shake(127); snd_shake_at(350, 90); snd_shake_at(700, 127);
     snd_ping_at(150, TI_CELESTA, 84, 90, -30); snd_ping_at(400, TI_CELESTA, 88, 90, 0); snd_ping_at(650, TI_CELESTA, 91, 100, 30);
@@ -187,7 +203,8 @@ static void app_main(void)
         uint32_t now;
         uint8_t st, d1, d2;
         platform_poll();
-        while (midi_get(&st, &d1, &d2)) {}       /* (the Advent date arrives here: to come) */
+        while (midi_get(&st, &d1, &d2))         /* the Advent date, from web/advent.html */
+            if (advent_midi(&set, &adv_rx, st, d1, d2)) { set_touch(); snd_fx(SFX_TWINKLE); }
         ui_pass();
         now = fm1_ms;
         if (now - last_draw >= 33u) {

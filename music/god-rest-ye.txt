@@ -1,0 +1,17 @@
+title: God Rest Ye Merry, Gentlemen
+source: English traditional carol (printed by William Sandys, 1833). Transcribed by ear for Tinsel; to check against a pre-1930 print.
+meter: 4/4
+tempo: 112
+pickup: 4
+picture: candle
+jolly: no
+tune: E4:4 | E4:4 B4:4 B4:4 A4:4 | G4:4 F#4:4 E4:4 D4:4 | E4:4 F#4:4 G4:4 A4:4 | B4:12 E4:4 |
+      E4:4 B4:4 B4:4 A4:4 | G4:4 F#4:4 E4:4 D4:4 | E4:4 F#4:4 G4:4 A4:4 | B4:12 B4:4 |
+      C5:4 A4:4 B4:4 C5:4 | D5:4 E5:4 B4:4 A4:4 | G4:4 E4:4 F#4:4 G4:4 | A4:8 G4:4 A4:4 |
+      B4:8 C5:4 B4:4 | B4:4 A4:4 G4:4 F#4:4 | E4:8 G4:2 F#4:2 E4:4 | A4:8 G4:4 A4:4 |
+      B4:4 C5:4 D5:4 E5:4 | B4:4 A4:4 G4:4 F#4:4 | E4:12 |
+chords: Em:4 | Em:16 | Em:8 B7:8 | Em:8 D:8 | Em:16 |
+        Em:16 | Em:8 B7:8 | Em:8 D:8 | Em:16 |
+        Am:8 Em:8 | G:8 B7:8 | Em:8 D:8 | D:16 |
+        Em:8 Am:8 | Em:8 B7:8 | Em:16 | D:16 |
+        G:8 C:8 | Em:8 B7:8 | Em:12 |

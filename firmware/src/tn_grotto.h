@@ -315,6 +315,24 @@ static void gr_draw(uint32_t now)
             g_rect(x, yy, gr.fsz[k], gr.fsz[k], P_SNOW);
         }
     }
+    if (set.doors >> 1 & 1u) {                   /* door 2: a candy cane in the snow */
+        g_rect(18, 204, 4, 26, P_SNOW);
+        for (y = 206; y < 230; y += 6) g_rect(18, y, 4, 3, P_RED);
+        g_ring(24, 205, 6, P_RED); g_ring(24, 205, 5, P_SNOW);
+        g_rect(18, 205, 12, 6, P_SNOW); g_rect(18, 205, 4, 2, P_RED);
+    }
+    if (set.doors >> 3 & 1u) {                   /* door 4: a gingerbread man */
+        g_disc(40, 212, 5, P_BROWN);
+        g_rect(36, 216, 9, 10, P_BROWN);
+        g_rect(32, 218, 17, 4, P_BROWN);
+        g_rect(36, 226, 3, 6, P_BROWN); g_rect(42, 226, 3, 6, P_BROWN);
+        g_pset(38, 211, P_SNOW); g_pset(42, 211, P_SNOW); g_pset(40, 219, P_RED); g_pset(40, 222, P_RED);
+    }
+    if (set.doors >> 5 & 1u) {                   /* door 6: a stocking on the tree */
+        g_rect(148, 150, 8, 14, P_RED);
+        g_rect(148, 162, 14, 6, P_RED);
+        g_rect(147, 148, 10, 4, P_SNOW);
+    }
     g_sprite(&ROBIN, gr.rx, gr.ry, 2, gr.rflip);
 }
 
